@@ -82,26 +82,70 @@ window.addEventListener('load', function () {
     document.getElementById('warning').style.display = 'block';
   }
 
+  autoConnect();
+
   this.document.getElementById('menu-buttons').addEventListener('click', function (event) {
-    window[event.target.dataset.handler]();
+    const handler = event.target.closest('[data-handler]');
+    if (handler)
+      runAction(handler.dataset.handler);
   })
 });
 
-document.getElementById('submitButton').addEventListener('click', async () => { await saveHandler(); });
+document.getElementById('submitButton').addEventListener('click', () => runAction('saveHandler'));
+
+const deskhopFilter = { vendorId: 0x2e8a, productId: 0x107c, usagePage: 0xff00, usage: 0x10 };
+
+function isDeskhop(d) {
+  return d.vendorId === deskhopFilter.vendorId && d.productId === deskhopFilter.productId &&
+    d.collections.some(c => c.usagePage === deskhopFilter.usagePage && c.usage === deskhopFilter.usage);
+}
+
+async function openDevice(d) {
+  if (!d || (device && device.opened))
+    return;
+
+  device = d;
+  if (!device.opened)
+    await device.open();
+
+  device.addEventListener('inputreport', handleInputReport);
+  document.querySelectorAll('.online').forEach(element => { element.style.opacity = 1.0; });
+  await readHandler('Connected · settings loaded');
+}
 
 async function connectHandler() {
   if (device && device.opened)
     return;
 
-  var devices = await navigator.hid.requestDevice({
-    filters: [{ vendorId: 0x2e8a, productId: 0x107c, usagePage: 0xff00, usage: 0x10 }]
+  var devices = await navigator.hid.requestDevice({ filters: [deskhopFilter] });
+  if (!devices.length) {
+    toast('No device selected', 'warn');
+    return;
+  }
+  await openDevice(devices[0]);
+}
+
+/* Chrome remembers a device once you've allowed it, so reconnect without a click when we can:
+   on page load, and whenever the DeskHop shows up again (e.g. after re-entering config mode). */
+async function autoConnect() {
+  if (!("hid" in navigator))
+    return;
+
+  const known = (await navigator.hid.getDevices()).find(isDeskhop);
+  if (known)
+    await openDevice(known);
+
+  navigator.hid.addEventListener('connect', async (event) => {
+    if (isDeskhop(event.device))
+      await openDevice(event.device);
   });
 
-  device = devices[0];
-  device.open().then(async () => {
-    device.addEventListener('inputreport', handleInputReport);
-    document.querySelectorAll('.online').forEach(element => { element.style.opacity = 1.0; });
-    await readHandler();
+  navigator.hid.addEventListener('disconnect', (event) => {
+    if (device && event.device === device) {
+      device = undefined;
+      document.querySelectorAll('.online').forEach(element => { element.style.opacity = ''; });
+      toast('Device disconnected', 'warn');
+    }
   });
 }
 
@@ -166,9 +210,24 @@ function updateElement(key, event) {
   }
 }
 
-async function readHandler() {
+/* Tracks a Read in progress so we can tell the user once values arrive (or don't) */
+var pendingRead = null;
+
+async function readHandler(successText = 'Settings loaded') {
   if (!device || !device.opened)
     await connectHandler();
+
+  if (pendingRead) {
+    clearTimeout(pendingRead.done);
+    clearTimeout(pendingRead.timeout);
+  }
+
+  pendingRead = { count: 0, successText };
+  pendingRead.timeout = setTimeout(() => {
+    if (pendingRead && pendingRead.count === 0)
+      toast('No response from device', 'error');
+    pendingRead = null;
+  }, 2000);
 
   await sendReport(packetType.getValAllMsg);
 }
@@ -178,6 +237,17 @@ async function handleInputReport(event) {
   var key = data[3];
 
   updateElement(key, event);
+
+  /* Values arrive one report each; call it done once they stop coming */
+  if (pendingRead) {
+    pendingRead.count++;
+    clearTimeout(pendingRead.done);
+    pendingRead.done = setTimeout(() => {
+      clearTimeout(pendingRead.timeout);
+      toast(pendingRead.successText, 'success');
+      pendingRead = null;
+    }, 300);
+  }
 }
 
 async function rebootHandler() {
@@ -226,4 +296,93 @@ async function saveHandler() {
 
 async function wipeConfigHandler() {
   await sendReport(packetType.wipeConfigMsg, [], true);
+}
+
+/* Swap the monitor layout between outputs A and B, same fields as the Left Ctrl + Right Shift + W
+   hotkey: screen count, speed X/Y, border top/bottom, screen position and cursor park position.
+   OS and screensaver stay with their output. Each changed value is sent to both boards, then saved. */
+const swapFieldOffsets = [1, 2, 3, 4, 5, 7, 8];
+const outputBase = { A: 10, B: 40 };
+
+async function swapLayoutHandler() {
+  if (!device || !device.opened)
+    return;
+
+  const changed = [];
+
+  for (const offset of swapFieldOffsets) {
+    const a = document.querySelector(`.api[data-key="${outputBase.A + offset}"]`);
+    const b = document.querySelector(`.api[data-key="${outputBase.B + offset}"]`);
+
+    if (!a || !b)
+      continue;
+
+    const valueA = a.value;
+    a.value = b.value;
+    b.value = valueA;
+
+    /* Keep the number boxes next to the sliders in step */
+    a.dispatchEvent(new Event('input', { bubbles: true }));
+    b.dispatchEvent(new Event('input', { bubbles: true }));
+
+    changed.push(a, b);
+  }
+
+  for (const element of changed)
+    await valueChangedHandler(element);
+
+  await sendReport(packetType.saveConfigMsg, [], true);
+}
+
+/* ---------- Feedback toasts ---------- */
+
+function toast(text, kind = 'info', ms = 3500) {
+  let stack = document.getElementById('toasts');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.id = 'toasts';
+    stack.setAttribute('aria-live', 'polite');
+    document.body.appendChild(stack);
+  }
+
+  const el = document.createElement('div');
+  el.className = `toast toast-${kind}`;
+  el.textContent = text;
+  el.addEventListener('click', () => el.remove());
+  stack.appendChild(el);
+
+  setTimeout(() => {
+    el.classList.add('toast-out');
+    setTimeout(() => el.remove(), 250);
+  }, ms);
+}
+
+/* What to say after each action. Read reports for itself once values arrive. */
+const actionMessages = {
+  saveHandler:            ['Saved to both boards', 'Save failed'],
+  swapLayoutHandler:      ['Swapped A ⇄ B and saved', 'Swap failed'],
+  rebootHandler:          ['Leaving config mode…', 'Exit failed'],
+  blinkHandler:           ['Blink sent', 'Blink failed'],
+  blinkBothHandler:       ['Blink sent to both boards', 'Blink failed'],
+  enterBootloaderHandler: ['Bootloader mode requested', 'Bootloader request failed'],
+  wipeConfigHandler:      ['Config wiped · defaults restored', 'Wipe failed'],
+};
+
+async function runAction(name) {
+  const needsDevice = name !== 'connectHandler';
+
+  if (needsDevice && (!device || !device.opened)) {
+    toast('Not connected · click Connect first', 'warn');
+    return;
+  }
+
+  try {
+    await window[name]();
+
+    if (actionMessages[name])
+      toast(actionMessages[name][0], 'success');
+  } catch (err) {
+    const failText = actionMessages[name] ? actionMessages[name][1] : 'Could not connect';
+    toast(`${failText}: ${err.message || err}`, 'error', 6000);
+  }
 }

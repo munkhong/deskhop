@@ -7,49 +7,47 @@
   onchange="valueChangedHandler(this)"
 {% endmacro %}
 
-{% macro label(item, class='', add='') %}
-<label class="{{class}}">{{ item.name }}{{ add }}</label>
+{% macro label(item, class='') %}
+<label class="{{class}}">{{ item.name }}</label>
 {% endmacro %}
 
 {% block form_render %}
   {% if item.get("elem") == "hex_info" %}
-  <div class="field">
+  <span class="stat">
     {{ label(item) }}
     {{ input(item, class='content api') }} data-hex readonly />
-  </div>
+  </span>
 
   {% elif item.get("elem") == "fw_version" %}
-  <div class="field">
+  <span class="stat">
     {{ label(item) }}
     {{ input(item) }} data-fw-ver readonly />
-  </div>
+  </span>
 
   {% elif item.get("elem") == "label" %}
-  <div class="field">
-    <span class="section-label">{{ item.name }}</span>
-  </div>
+  <h3 class="subhead">{{ item.name }}</h3>
 
   {% elif item.get("elem") == "range" %}
-  <div class="field field-range">
+  <div class="row row-range">
     <form>
       {{ label(item) }}
 
-      {{ input(item, class='input-inline', type='number', name='aInput') }}
-        readonly oninput="this.form.aRange{{ key }}.value=this.value" />
-
       {{ input(item, class='range api', type='range', name='aRange') }}
         min="{{ item['values'].min }}" max="{{ item['values'].max }}" oninput="this.form.aInput{{key}}.value=this.value" />
+
+      {{ input(item, class='value', type='number', name='aInput') }}
+        readonly oninput="this.form.aRange{{ key }}.value=this.value" />
     </form>
   </div>
 
   {% elif item.get("elem") == "checkbox" %}
-  <div class="field field-check">
+  <div class="row">
     {{ label(item) }}
     {{ input(item, type="checkbox") }}  />
   </div>
 
   {% elif item["values"] %}
-  <div class="field">
+  <div class="row">
     {{ label(item) }}
     <select class="api" data-type="{{ item.type }}" data-key="{{ key }}" required>
     <option disabled selected value></option>
@@ -61,7 +59,7 @@
   </div>
 
   {% else %}
-  <div class="field">
+  <div class="row">
     {{ label(item) }}
     {{ input(item) }}  />
   </div>

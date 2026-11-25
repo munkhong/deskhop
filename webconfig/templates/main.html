@@ -1,5 +1,38 @@
 {# templates/main.j2 #}
 
+{% set basic = ["Operating System", "Screen Position", "Screen Count", "Speed X", "Speed Y"] %}
+{% set advanced = ["Border Top", "Border Bottom", "Cursor Park Position"] %}
+{% set saver = ["Mode", "Only If Inactive", "Idle Time (sec)", "Max Time (sec)"] %}
+
+{% macro fields(items, names) %}
+  {% for name in names %}
+    {% for item in items if item.name == name %}
+      {% include "form.html" with context %}
+    {% endfor %}
+  {% endfor %}
+{% endmacro %}
+
+{% macro output_card(letter, items) %}
+<section class="card output-{{ letter|lower }}">
+  <header class="card-head">
+    <span class="tag">{{ letter }}</span>
+    <h2>Output {{ letter }}</h2>
+  </header>
+
+  {{ fields(items, basic) }}
+
+  <details class="group">
+    <summary>Advanced</summary>
+    {{ fields(items, advanced) }}
+  </details>
+
+  <details class="group">
+    <summary>Screensaver</summary>
+    {{ fields(items, saver) }}
+  </details>
+</section>
+{% endmacro %}
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -15,88 +48,70 @@
 
 <body>
 
-  <main class="app">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">Desk<span class="accent">Hop</span></div>
 
-    <div id="warning" class="card warning" style="display: none;">
-      <h3>Oh, no!</h3>
-      <p>Unfortunately, your browser does not support WebHID or the Permissions Policy is blocking its usage.
-        Please try Chromium (or Chrome if you have to). Apologies for the inconvenience, hopefully a cross-browser
-        solution happens soon.</p>
+      <nav id="menu-buttons">
+        <button data-handler="connectHandler" class="btn btn-primary">Connect</button>
+        <button data-handler="readHandler" class="btn online">Read</button>
+        <button data-handler="saveHandler" class="btn online">Save</button>
+        <button data-handler="rebootHandler" class="btn online">Exit</button>
+        <button data-handler="swapLayoutHandler" class="btn online" title="Swap position, speed, screens, borders and cursor park between A and B (same as Left Ctrl + Right Shift + W)">Swap A &#8644; B</button>
+
+        <details class="more">
+          <summary class="btn">More</summary>
+          <div class="menu">
+            <button data-handler="blinkHandler" class="online">Blink</button>
+            <button data-handler="blinkBothHandler" class="online">Blink both</button>
+            <button data-handler="enterBootloaderHandler" class="online">Bootloader</button>
+            <button data-handler="wipeConfigHandler" class="online danger">Wipe config</button>
+          </div>
+        </details>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <div id="warning" class="notice" style="display: none;">
+      <strong>WebHID isn't available.</strong>
+      Your browser doesn't support WebHID or a Permissions Policy is blocking it. Please use Chrome, Edge or another
+      Chromium-based browser.
     </div>
 
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo-well">
-          <svg viewBox="0 0 100 100" class="logo" aria-hidden="true">
-            <rect x="12" y="18" width="76" height="52" rx="9" />
-            <line x1="50" y1="70" x2="50" y2="82" />
-            <line x1="34" y1="84" x2="66" y2="84" />
-            <path d="M42 34 L42 56 L48 51 L52 60 L56 58 L52 49 L60 48 Z" class="cursor" />
-          </svg>
+    <div class="outputs">
+      {{ output_card("A", screen_A) }}
+      {{ output_card("B", screen_B) }}
+    </div>
+
+    <section class="card general">
+      <header class="card-head">
+        <h2>General</h2>
+      </header>
+      <div class="general-cols">
+        <div>
+          {% for item in config[0:5] %}
+            {% include "form.html" with context %}
+          {% endfor %}
         </div>
-        <h1>Desk<span class="accent">Hop</span> <span class="thin">Config</span></h1>
+        <div>
+          {% for item in config[5:] %}
+            {% include "form.html" with context %}
+          {% endfor %}
+        </div>
       </div>
-    </header>
+      <div class="actions">
+        <input type="submit" value="Save" id="submitButton" class="btn btn-primary">
+      </div>
+    </section>
 
-    <div class="layout">
+    <footer class="status">
+      {% for item in status %}
+        {% include "form.html" with context %}
+      {% endfor %}
+    </footer>
 
-      <aside class="card sidebar">
-        <div id="menu-buttons">
-          <p class="group-title">Device</p>
-          <button data-handler="connectHandler" class="btn btn-primary">Connect</button>
-          <button data-handler="readHandler" class="btn online">Read</button>
-          <button data-handler="saveHandler" class="btn online">Save</button>
-          <button data-handler="rebootHandler" class="btn online">Exit</button>
-
-          <p class="group-title">Tools</p>
-          <button data-handler="blinkHandler" class="btn online">Blink</button>
-          <button data-handler="blinkBothHandler" class="btn online">Blink both</button>
-          <button data-handler="enterBootloaderHandler" class="btn online">Bootloader</button>
-          <button data-handler="wipeConfigHandler" class="btn btn-danger online">Wipe Config</button>
-        </div>
-      </aside>
-
-      <section class="card output output-a">
-        <div class="card-head">
-          <span class="badge">A</span>
-          <h3>Output A</h3>
-        </div>
-        {% for item in screen_A %}
-          {% include "form.html" with context %}
-        {% endfor %}
-      </section>
-
-      <section class="card output output-b">
-        <div class="card-head">
-          <span class="badge">B</span>
-          <h3>Output B</h3>
-        </div>
-        {% for item in screen_B %}
-          {% include "form.html" with context %}
-        {% endfor %}
-      </section>
-
-      <section class="card common">
-        <div class="card-head">
-          <h3>Common Config</h3>
-        </div>
-        {% for item in config %}
-          {% include "form.html" with context %}
-        {% endfor %}
-
-        <input type="submit" value="Save" id="submitButton" class="btn btn-primary btn-wide">
-      </section>
-
-      <section class="card status">
-        <div class="card-head">
-          <h3>Device Status</h3>
-        </div>
-        {% for item in status %}
-          {% include "form.html" with context %}
-        {% endfor %}
-      </section>
-
-    </div>
   </main>
 
   <script>

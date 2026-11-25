@@ -1,5 +1,13 @@
 
 
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,263 +15,281 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* DeskHop config — soft UI (neumorphism) theme */
+    /* DeskHop config — clean, flat settings layout */
 
 :root {
-  --bg: #e4e9f0;
-  --sh-dark: #b8c2d0;
-  --sh-light: #ffffff;
-  --text: #3a4656;
-  --muted: #7d8899;
-  --accent: #5e9f41;
-  --accent-2: #74b956;
-  --danger: #c4544b;
-  --radius: 18px;
-  --radius-sm: 12px;
-  --raise: 7px 7px 16px var(--sh-dark), -7px -7px 16px var(--sh-light);
-  --raise-sm: 4px 4px 9px var(--sh-dark), -4px -4px 9px var(--sh-light);
-  --inset: inset 4px 4px 8px var(--sh-dark), inset -4px -4px 8px var(--sh-light);
-  --inset-sm: inset 2px 2px 5px var(--sh-dark), inset -2px -2px 5px var(--sh-light);
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --border: #e3e6ea;
+  --border-strong: #cfd4da;
+  --text: #1f2328;
+  --muted: #6b7380;
+  --accent: #3f8f2a;
+  --accent-soft: #e8f3e4;
+  --danger: #c93c37;
+  --warn: #b7791f;
+  --radius: 10px;
+  --control-w: 190px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #2a2e35;
-    --sh-dark: #1d2025;
-    --sh-light: #373c45;
-    --text: #dde3ea;
-    --muted: #8f99a7;
-    --accent: #7cc25c;
-    --accent-2: #93d474;
-    --danger: #e06c62;
+    --bg: #111317;
+    --surface: #181b20;
+    --border: #2a2f36;
+    --border-strong: #3a414a;
+    --text: #e6e9ed;
+    --muted: #8d96a3;
+    --accent: #6cc04a;
+    --accent-soft: #1d2b19;
+    --danger: #f07167;
+    --warn: #e0a43a;
   }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { font-size: 15px; }
-
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
-  line-height: 1.45;
+  font: 14px/1.5 "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; }
-p { margin: 0; }
-
-.app { max-width: 1280px; margin: 0 auto; padding: 28px 28px 48px; }
-
-/* ---------- Header ---------- */
-.topbar { margin-bottom: 26px; }
-.brand { display: flex; align-items: center; gap: 18px; }
-.brand h1 { font-size: 1.9rem; }
+h2, h3 { margin: 0; }
 .accent { color: var(--accent); }
-.thin { font-weight: 300; color: var(--muted); }
 
-.logo-well {
-  width: 62px; height: 62px; border-radius: 50%;
-  display: grid; place-items: center;
-  background: var(--bg); box-shadow: var(--raise-sm);
+/* ---------- Top bar ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
-.logo { width: 38px; height: 38px; fill: none; stroke: var(--text); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
-.logo .cursor { fill: var(--accent); stroke: var(--accent); stroke-width: 3; }
-
-/* ---------- Layout ---------- */
-.layout {
-  display: grid;
-  grid-template-columns: 210px 1fr 1fr;
-  grid-template-areas:
-    "side outA outB"
-    "side common status";
-  gap: 26px;
-  align-items: start;
+.topbar-inner {
+  max-width: 1040px; margin: 0 auto; padding: 12px 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
-.sidebar { grid-area: side; position: sticky; top: 24px; }
-.output-a { grid-area: outA; }
-.output-b { grid-area: outB; }
-.common { grid-area: common; }
-.status { grid-area: status; }
+.brand { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
 
-@media (max-width: 960px) {
-  .layout { grid-template-columns: 1fr 1fr; grid-template-areas: "side side" "outA outB" "common status"; }
-  .sidebar { position: static; }
-  #menu-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  #menu-buttons .group-title { grid-column: 1 / -1; }
-}
-@media (max-width: 640px) {
-  .app { padding: 18px; }
-  .layout { grid-template-columns: 1fr; grid-template-areas: "side" "outA" "outB" "common" "status"; }
-  #menu-buttons { grid-template-columns: repeat(2, 1fr); }
-}
+#menu-buttons { display: flex; align-items: center; gap: 8px; }
 
-/* ---------- Cards ---------- */
-.card {
-  background: var(--bg);
-  border-radius: var(--radius);
-  box-shadow: var(--raise);
-  padding: 22px 24px 24px;
-}
-.card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-.card-head h3 { font-size: 1.15rem; }
-
-.badge {
-  width: 34px; height: 34px; border-radius: 50%;
-  display: grid; place-items: center;
-  font-weight: 700; color: var(--accent);
-  box-shadow: var(--inset-sm);
-}
-
-.warning { margin-bottom: 24px; border-left: 4px solid var(--danger); }
-.warning h3 { color: var(--danger); margin-bottom: 6px; }
-
-/* ---------- Sidebar buttons ---------- */
-.group-title {
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--muted); margin: 4px 4px 12px;
-}
-.group-title:not(:first-child) { margin-top: 22px; }
-
+/* ---------- Buttons ---------- */
 .btn {
+  appearance: none;
+  height: 32px; padding: 0 14px;
+  border: 1px solid var(--border-strong); border-radius: 8px;
+  background: var(--surface); color: var(--text);
+  font: inherit; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center;
+}
+.btn:hover { background: var(--bg); }
+.btn:focus-visible, .more .menu button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent); filter: brightness(1.08); }
+
+/* Needs a connected device: dimmed until script.js sets opacity 1 */
+.online { opacity: 0.45; }
+
+/* "More" dropdown */
+.more { position: relative; }
+.more summary { list-style: none; }
+.more summary::-webkit-details-marker { display: none; }
+.more summary::after { content: ""; margin-left: 8px; border: 4px solid transparent; border-top-color: currentColor; transform: translateY(2px); }
+.more .menu {
+  position: absolute; right: 0; top: calc(100% + 6px);
+  min-width: 170px; padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+}
+.more .menu button {
   display: block; width: 100%;
-  margin: 0 0 12px;
-  padding: 11px 14px;
-  border: 0; border-radius: var(--radius-sm);
-  background: var(--bg); color: var(--text);
-  font: inherit; font-weight: 600; font-size: 0.92rem;
-  box-shadow: var(--raise-sm);
-  cursor: pointer;
-  transition: box-shadow .15s ease, color .15s ease, transform .1s ease;
+  padding: 8px 10px; border: 0; border-radius: 6px;
+  background: none; color: var(--text);
+  font: inherit; text-align: left; cursor: pointer;
 }
-#menu-buttons .btn { margin: 0 0 12px; }
-@media (max-width: 960px) { #menu-buttons .btn { margin: 0; } }
+.more .menu button:hover { background: var(--bg); }
+.more .menu .danger { color: var(--danger); }
 
-.btn:hover { color: var(--accent); }
-.btn:active { box-shadow: var(--inset-sm); transform: translateY(1px); }
-.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.btn-primary { color: var(--accent); }
-.btn-danger:hover { color: var(--danger); }
-.btn-wide { margin-top: 20px; }
+/* ---------- Page ---------- */
+.page { max-width: 1040px; margin: 0 auto; padding: 24px; }
 
-/* Buttons that need a connected device start dimmed; script.js sets opacity 1 on connect */
-.online { opacity: 0.5; }
-
-/* ---------- Form fields ---------- */
-.field { margin-bottom: 14px; }
-.field > label, .field form > label {
-  display: block; font-size: 0.85rem; font-weight: 600; color: var(--muted); margin: 0 2px 6px;
+.notice {
+  margin-bottom: 20px; padding: 12px 16px;
+  border: 1px solid var(--danger); border-radius: var(--radius);
+  color: var(--text); background: var(--surface);
 }
 
-.section-label {
-  display: block;
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--accent);
-  margin: 22px 2px 12px; padding-top: 16px;
-  border-top: 1px solid var(--sh-dark);
-}
-.card-head + .field .section-label { margin-top: 4px; padding-top: 0; border-top: 0; }
+.outputs { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
 
-input[type='text'], input[type='number'], select {
-  width: 100%;
-  padding: 10px 14px;
-  border: 0; border-radius: var(--radius-sm);
-  background: var(--bg); color: var(--text);
-  font: inherit; font-size: 0.95rem;
-  box-shadow: var(--inset);
-  outline: none;
-  transition: box-shadow .15s ease;
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px 8px;
 }
-input[type='text']:focus, input[type='number']:focus, select:focus {
-  box-shadow: var(--inset), 0 0 0 2px var(--accent);
-}
-input[readonly] { color: var(--muted); }
+.card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.card-head h2 { font-size: 16px; font-weight: 650; }
 
-select {
-  appearance: none; -webkit-appearance: none;
-  padding-right: 38px;
-  cursor: pointer;
-  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
-  background-position: calc(100% - 20px) 52%, calc(100% - 15px) 52%;
-  background-size: 5px 5px, 5px 5px;
-  background-repeat: no-repeat;
+.tag {
+  width: 24px; height: 24px; border-radius: 6px;
+  display: inline-grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent);
+  font-size: 13px; font-weight: 700;
 }
-select option { background: var(--bg); color: var(--text); }
 
-/* Range rows: label, value bubble, slider */
-.field-range form {
-  display: grid;
-  grid-template-columns: 1fr 72px;
-  grid-template-areas: "label value" "slider slider";
-  align-items: center;
-  gap: 4px 12px;
+/* ---------- Setting rows ---------- */
+.row, .row-range form {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  min-height: 46px; padding: 6px 0;
+  border-top: 1px solid var(--border);
   margin: 0;
 }
-.field-range label { grid-area: label; margin: 0 2px; }
-.field-range .input-inline {
-  grid-area: value;
-  padding: 6px 8px; text-align: center; font-weight: 600; color: var(--accent);
-  box-shadow: var(--inset-sm);
+.row.row-range { padding: 0; min-height: 0; }
+.row-range form { flex: 1 1 auto; border-top: 0; }
+.card-head + .row, .card-head + .row-range, .subhead + .row, .subhead + .row-range { border-top: 0; }
+
+.row label { color: var(--text); }
+
+.subhead {
+  margin: 14px 0 2px;
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.general-cols > div > .subhead:first-child { margin-top: 0; }
+
+/* Controls */
+select, input[type='text'], input[type='number'] {
+  height: 32px; width: var(--control-w);
+  padding: 0 10px;
+  border: 1px solid var(--border-strong); border-radius: 8px;
+  background: var(--surface); color: var(--text);
+  font: inherit;
+}
+select:focus, input[type='text']:focus, input[type='number']:focus {
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
+}
+select {
+  appearance: none; -webkit-appearance: none;
+  padding-right: 30px; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 16px) 14px, calc(100% - 11px) 14px;
+  background-size: 5px 5px; background-repeat: no-repeat;
+}
+select option { background: var(--surface); color: var(--text); }
+
+/* Slider rows: label | slider | value */
+.row-range label { flex: 1 1 auto; }
+.row-range input[type='range'] { flex: 0 0 auto; width: calc(var(--control-w) - 60px); margin: 0; }
+.row-range .value {
+  width: 48px; padding: 0 4px; text-align: center;
+  font-variant-numeric: tabular-nums; font-weight: 600;
   -moz-appearance: textfield;
 }
-.field-range .input-inline::-webkit-outer-spin-button,
-.field-range .input-inline::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.row-range .value::-webkit-outer-spin-button,
+.row-range .value::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-input[type='range'] {
-  grid-area: slider;
-  -webkit-appearance: none; appearance: none;
-  width: 100%; height: 12px; margin: 10px 0 4px;
-  border-radius: 999px;
-  background: var(--bg);
-  box-shadow: var(--inset-sm);
-  cursor: pointer;
-}
-input[type='range']::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 24px; height: 24px; border-radius: 50%;
-  background: var(--bg);
-  border: 6px solid var(--accent);
-  box-shadow: var(--raise-sm);
-}
-input[type='range']::-moz-range-thumb {
-  width: 14px; height: 14px; border-radius: 50%;
-  background: var(--bg);
-  border: 6px solid var(--accent);
-  box-shadow: var(--raise-sm);
-}
-input[type='range']:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+input[type='range'] { accent-color: var(--accent); height: 4px; cursor: pointer; }
 
-/* Checkbox rows become toggle switches */
-.field-check { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.field-check label { margin: 0 2px; color: var(--text); font-weight: 500; font-size: 0.92rem; }
-
+/* Checkboxes as small switches */
 input[type='checkbox'] {
   -webkit-appearance: none; appearance: none;
-  flex: 0 0 auto;
-  position: relative;
-  width: 50px; height: 28px; margin: 0;
+  position: relative; flex: 0 0 auto;
+  width: 36px; height: 20px; margin: 0;
   border-radius: 999px;
-  background: var(--bg);
-  box-shadow: var(--inset-sm);
-  cursor: pointer;
-  transition: background .2s ease;
+  background: var(--border-strong);
+  cursor: pointer; transition: background .15s;
 }
 input[type='checkbox']::after {
-  content: "";
-  position: absolute; top: 4px; left: 4px;
-  width: 20px; height: 20px; border-radius: 50%;
-  background: var(--bg);
-  box-shadow: 2px 2px 5px var(--sh-dark), -1px -1px 3px var(--sh-light);
-  transition: transform .2s ease, background .2s ease;
+  content: ""; position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; transition: transform .15s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
 }
-input[type='checkbox']:checked { background: var(--accent); box-shadow: inset 2px 2px 5px rgba(0,0,0,.25); }
-input[type='checkbox']:checked::after { transform: translateX(22px); background: #fff; }
-input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+input[type='checkbox']:checked { background: var(--accent); }
+input[type='checkbox']:checked::after { transform: translateX(16px); }
+input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* Status values */
-.status .field input { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
+/* ---------- Collapsible groups ---------- */
+.group { border-top: 1px solid var(--border); }
+.group summary {
+  list-style: none; cursor: pointer;
+  padding: 12px 0;
+  color: var(--muted); font-weight: 600;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.group summary::-webkit-details-marker { display: none; }
+.group summary::after {
+  content: ""; width: 7px; height: 7px;
+  border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); margin-right: 6px; transition: transform .15s;
+}
+.group[open] summary::after { transform: rotate(-135deg); }
+.group summary:hover { color: var(--text); }
+.group[open] { padding-bottom: 6px; }
+.group summary + .row, .group summary + .row-range { border-top: 0; }
+
+/* ---------- General ---------- */
+.general { padding-bottom: 16px; }
+.general-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 40px; }
+.actions { display: flex; justify-content: flex-end; margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--border); }
+
+/* ---------- Status line ---------- */
+.status {
+  display: flex; flex-wrap: wrap; gap: 6px 24px;
+  margin-top: 16px; padding: 0 4px;
+  color: var(--muted); font-size: 12px;
+}
+.stat { display: inline-flex; align-items: center; gap: 6px; }
+.stat input {
+  width: auto; height: auto; padding: 0; border: 0; background: none;
+  color: var(--muted); font: 12px ui-monospace, "Cascadia Code", Consolas, monospace;
+  field-sizing: content; min-width: 7ch;
+}
+.stat input:focus { box-shadow: none; }
+
+/* ---------- Narrow screens ---------- */
+@media (max-width: 800px) {
+  .outputs, .general-cols { grid-template-columns: 1fr; }
+  .topbar-inner { flex-wrap: wrap; }
+}
+
+/* ---------- Toasts ---------- */
+#toasts {
+  position: fixed; right: 20px; bottom: 20px; z-index: 50;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto; cursor: pointer;
+  display: flex; align-items: center; gap: 10px;
+  max-width: 360px; padding: 10px 14px;
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-left: 3px solid var(--muted);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .12);
+  font-weight: 500;
+  animation: toast-in .2s ease-out;
+}
+.toast::before {
+  content: ""; flex: 0 0 auto;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--muted);
+}
+.toast-success { border-left-color: var(--accent); }
+.toast-success::before { background: var(--accent); }
+.toast-error { border-left-color: var(--danger); }
+.toast-error::before { background: var(--danger); }
+.toast-warn { border-left-color: var(--warn); }
+.toast-warn::before { background: var(--warn); }
+.toast-out { opacity: 0; transform: translateY(6px); transition: opacity .25s, transform .25s; }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
   </style>
 
   <title>DeskHop Config</title>
@@ -271,173 +297,50 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 <body>
 
-  <main class="app">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">Desk<span class="accent">Hop</span></div>
 
-    <div id="warning" class="card warning" style="display: none;">
-      <h3>Oh, no!</h3>
-      <p>Unfortunately, your browser does not support WebHID or the Permissions Policy is blocking its usage.
-        Please try Chromium (or Chrome if you have to). Apologies for the inconvenience, hopefully a cross-browser
-        solution happens soon.</p>
+      <nav id="menu-buttons">
+        <button data-handler="connectHandler" class="btn btn-primary">Connect</button>
+        <button data-handler="readHandler" class="btn online">Read</button>
+        <button data-handler="saveHandler" class="btn online">Save</button>
+        <button data-handler="rebootHandler" class="btn online">Exit</button>
+        <button data-handler="swapLayoutHandler" class="btn online" title="Swap position, speed, screens, borders and cursor park between A and B (same as Left Ctrl + Right Shift + W)">Swap A &#8644; B</button>
+
+        <details class="more">
+          <summary class="btn">More</summary>
+          <div class="menu">
+            <button data-handler="blinkHandler" class="online">Blink</button>
+            <button data-handler="blinkBothHandler" class="online">Blink both</button>
+            <button data-handler="enterBootloaderHandler" class="online">Bootloader</button>
+            <button data-handler="wipeConfigHandler" class="online danger">Wipe config</button>
+          </div>
+        </details>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <div id="warning" class="notice" style="display: none;">
+      <strong>WebHID isn't available.</strong>
+      Your browser doesn't support WebHID or a Permissions Policy is blocking it. Please use Chrome, Edge or another
+      Chromium-based browser.
     </div>
 
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo-well">
-          <svg viewBox="0 0 100 100" class="logo" aria-hidden="true">
-            <rect x="12" y="18" width="76" height="52" rx="9" />
-            <line x1="50" y1="70" x2="50" y2="82" />
-            <line x1="34" y1="84" x2="66" y2="84" />
-            <path d="M42 34 L42 56 L48 51 L52 60 L56 58 L52 49 L60 48 Z" class="cursor" />
-          </svg>
-        </div>
-        <h1>Desk<span class="accent">Hop</span> <span class="thin">Config</span></h1>
-      </div>
-    </header>
-
-    <div class="layout">
-
-      <aside class="card sidebar">
-        <div id="menu-buttons">
-          <p class="group-title">Device</p>
-          <button data-handler="connectHandler" class="btn btn-primary">Connect</button>
-          <button data-handler="readHandler" class="btn online">Read</button>
-          <button data-handler="saveHandler" class="btn online">Save</button>
-          <button data-handler="rebootHandler" class="btn online">Exit</button>
-
-          <p class="group-title">Tools</p>
-          <button data-handler="blinkHandler" class="btn online">Blink</button>
-          <button data-handler="blinkBothHandler" class="btn online">Blink both</button>
-          <button data-handler="enterBootloaderHandler" class="btn online">Bootloader</button>
-          <button data-handler="wipeConfigHandler" class="btn btn-danger online">Wipe Config</button>
-        </div>
-      </aside>
-
-      <section class="card output output-a">
-        <div class="card-head">
-          <span class="badge">A</span>
-          <h3>Output A</h3>
-        </div>
-        
-          
-
-
-
-
-
-
-
-
-  
-  <div class="field">
-    
-<label class="">Screen Count</label>
-
-    <select class="api" data-type="uint32" data-key="11" required>
-    <option disabled selected value></option>
-
-    
-    <option value="1">1</option>
-    
-    <option value="2">2</option>
-    
-    <option value="3">3</option>
-    
-    </select>
-  </div>
-
-  
-
-        
-          
-
-
-
-
-
-
-
-
-  
-  <div class="field field-range">
-    <form>
+    <div class="outputs">
       
-<label class="">Speed X</label>
-
-
-      
-<input class="input-inline" type="number" name="aInput12" data-type="int32" data-key="12"
-  onchange="valueChangedHandler(this)"
-
-        readonly oninput="this.form.aRange12.value=this.value" />
-
-      
-<input class="range api" type="range" name="aRange12" data-type="int32" data-key="12"
-  onchange="valueChangedHandler(this)"
-
-        min="1" max="100" oninput="this.form.aInput12.value=this.value" />
-    </form>
-  </div>
+<section class="card output-a">
+  <header class="card-head">
+    <span class="tag">A</span>
+    <h2>Output A</h2>
+  </header>
 
   
-
-        
-          
-
-
-
-
-
-
-
-
   
-  <div class="field field-range">
-    <form>
-      
-<label class="">Speed Y</label>
-
-
-      
-<input class="input-inline" type="number" name="aInput13" data-type="int32" data-key="13"
-  onchange="valueChangedHandler(this)"
-
-        readonly oninput="this.form.aRange13.value=this.value" />
-
-      
-<input class="range api" type="range" name="aRange13" data-type="int32" data-key="13"
-  onchange="valueChangedHandler(this)"
-
-        min="1" max="100" oninput="this.form.aInput13.value=this.value" />
-    </form>
-  </div>
-
-  
-
-        
-          
-
-
-
-
-
-
-
-
-  
-  <div class="field">
     
-<label class="">Border Top</label>
-
-    
-<input class="api" type="text" name="name14" data-type="int32" data-key="14"
-  onchange="valueChangedHandler(this)"
-  />
-  </div>
-
-  
-
-        
-          
+      
 
 
 
@@ -447,30 +350,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field">
-    
-<label class="">Border Bottom</label>
-
-    
-<input class="api" type="text" name="name15" data-type="int32" data-key="15"
-  onchange="valueChangedHandler(this)"
-  />
-  </div>
-
-  
-
-        
-          
-
-
-
-
-
-
-
-
-  
-  <div class="field">
+  <div class="row">
     
 <label class="">Operating System</label>
 
@@ -493,8 +373,10 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
-          
+    
+  
+    
+      
 
 
 
@@ -504,7 +386,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field">
+  <div class="row">
     
 <label class="">Screen Position</label>
 
@@ -521,8 +403,10 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
-          
+    
+  
+    
+      
 
 
 
@@ -532,7 +416,165 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field">
+  <div class="row">
+    
+<label class="">Screen Count</label>
+
+    <select class="api" data-type="uint32" data-key="11" required>
+    <option disabled selected value></option>
+
+    
+    <option value="1">1</option>
+    
+    <option value="2">2</option>
+    
+    <option value="3">3</option>
+    
+    </select>
+  </div>
+
+  
+
+    
+  
+    
+      
+
+
+
+
+
+
+
+
+  
+  <div class="row row-range">
+    <form>
+      
+<label class="">Speed X</label>
+
+
+      
+<input class="range api" type="range" name="aRange12" data-type="int32" data-key="12"
+  onchange="valueChangedHandler(this)"
+
+        min="1" max="100" oninput="this.form.aInput12.value=this.value" />
+
+      
+<input class="value" type="number" name="aInput12" data-type="int32" data-key="12"
+  onchange="valueChangedHandler(this)"
+
+        readonly oninput="this.form.aRange12.value=this.value" />
+    </form>
+  </div>
+
+  
+
+    
+  
+    
+      
+
+
+
+
+
+
+
+
+  
+  <div class="row row-range">
+    <form>
+      
+<label class="">Speed Y</label>
+
+
+      
+<input class="range api" type="range" name="aRange13" data-type="int32" data-key="13"
+  onchange="valueChangedHandler(this)"
+
+        min="1" max="100" oninput="this.form.aInput13.value=this.value" />
+
+      
+<input class="value" type="number" name="aInput13" data-type="int32" data-key="13"
+  onchange="valueChangedHandler(this)"
+
+        readonly oninput="this.form.aRange13.value=this.value" />
+    </form>
+  </div>
+
+  
+
+    
+  
+
+
+  <details class="group">
+    <summary>Advanced</summary>
+    
+  
+    
+      
+
+
+
+
+
+
+
+
+  
+  <div class="row">
+    
+<label class="">Border Top</label>
+
+    
+<input class="api" type="text" name="name14" data-type="int32" data-key="14"
+  onchange="valueChangedHandler(this)"
+  />
+  </div>
+
+  
+
+    
+  
+    
+      
+
+
+
+
+
+
+
+
+  
+  <div class="row">
+    
+<label class="">Border Bottom</label>
+
+    
+<input class="api" type="text" name="name15" data-type="int32" data-key="15"
+  onchange="valueChangedHandler(this)"
+  />
+  </div>
+
+  
+
+    
+  
+    
+      
+
+
+
+
+
+
+
+
+  
+  <div class="row">
     
 <label class="">Cursor Park Position</label>
 
@@ -551,8 +593,17 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
-          
+    
+  
+
+  </details>
+
+  <details class="group">
+    <summary>Screensaver</summary>
+    
+  
+    
+      
 
 
 
@@ -562,24 +613,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field">
-    <span class="section-label">Screensaver</span>
-  </div>
-
-  
-
-        
-          
-
-
-
-
-
-
-
-
-  
-  <div class="field">
+  <div class="row">
     
 <label class="">Mode</label>
 
@@ -598,8 +632,10 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
-          
+    
+  
+    
+      
 
 
 
@@ -609,7 +645,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field field-check">
+  <div class="row">
     
 <label class="">Only If Inactive</label>
 
@@ -621,8 +657,10 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
-          
+    
+  
+    
+      
 
 
 
@@ -632,7 +670,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field">
+  <div class="row">
     
 <label class="">Idle Time (sec)</label>
 
@@ -644,8 +682,10 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
-          
+    
+  
+    
+      
 
 
 
@@ -655,7 +695,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field">
+  <div class="row">
     
 <label class="">Max Time (sec)</label>
 
@@ -667,135 +707,23 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
-      </section>
-
-      <section class="card output output-b">
-        <div class="card-head">
-          <span class="badge">B</span>
-          <h3>Output B</h3>
-        </div>
-        
-          
-
-
-
-
-
-
-
-
-  
-  <div class="field">
     
-<label class="">Screen Count</label>
-
-    <select class="api" data-type="uint32" data-key="41" required>
-    <option disabled selected value></option>
-
-    
-    <option value="1">1</option>
-    
-    <option value="2">2</option>
-    
-    <option value="3">3</option>
-    
-    </select>
-  </div>
-
   
 
-        
-          
-
-
-
-
-
-
-
-
-  
-  <div class="field field-range">
-    <form>
-      
-<label class="">Speed X</label>
-
+  </details>
+</section>
 
       
-<input class="input-inline" type="number" name="aInput42" data-type="int32" data-key="42"
-  onchange="valueChangedHandler(this)"
-
-        readonly oninput="this.form.aRange42.value=this.value" />
-
-      
-<input class="range api" type="range" name="aRange42" data-type="int32" data-key="42"
-  onchange="valueChangedHandler(this)"
-
-        min="1" max="100" oninput="this.form.aInput42.value=this.value" />
-    </form>
-  </div>
+<section class="card output-b">
+  <header class="card-head">
+    <span class="tag">B</span>
+    <h2>Output B</h2>
+  </header>
 
   
-
-        
-          
-
-
-
-
-
-
-
-
   
-  <div class="field field-range">
-    <form>
-      
-<label class="">Speed Y</label>
-
-
-      
-<input class="input-inline" type="number" name="aInput43" data-type="int32" data-key="43"
-  onchange="valueChangedHandler(this)"
-
-        readonly oninput="this.form.aRange43.value=this.value" />
-
-      
-<input class="range api" type="range" name="aRange43" data-type="int32" data-key="43"
-  onchange="valueChangedHandler(this)"
-
-        min="1" max="100" oninput="this.form.aInput43.value=this.value" />
-    </form>
-  </div>
-
-  
-
-        
-          
-
-
-
-
-
-
-
-
-  
-  <div class="field">
     
-<label class="">Border Top</label>
-
-    
-<input class="api" type="text" name="name44" data-type="int32" data-key="44"
-  onchange="valueChangedHandler(this)"
-  />
-  </div>
-
-  
-
-        
-          
+      
 
 
 
@@ -805,30 +733,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field">
-    
-<label class="">Border Bottom</label>
-
-    
-<input class="api" type="text" name="name45" data-type="int32" data-key="45"
-  onchange="valueChangedHandler(this)"
-  />
-  </div>
-
-  
-
-        
-          
-
-
-
-
-
-
-
-
-  
-  <div class="field">
+  <div class="row">
     
 <label class="">Operating System</label>
 
@@ -851,8 +756,10 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
-          
+    
+  
+    
+      
 
 
 
@@ -862,7 +769,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field">
+  <div class="row">
     
 <label class="">Screen Position</label>
 
@@ -879,8 +786,10 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
-          
+    
+  
+    
+      
 
 
 
@@ -890,7 +799,165 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field">
+  <div class="row">
+    
+<label class="">Screen Count</label>
+
+    <select class="api" data-type="uint32" data-key="41" required>
+    <option disabled selected value></option>
+
+    
+    <option value="1">1</option>
+    
+    <option value="2">2</option>
+    
+    <option value="3">3</option>
+    
+    </select>
+  </div>
+
+  
+
+    
+  
+    
+      
+
+
+
+
+
+
+
+
+  
+  <div class="row row-range">
+    <form>
+      
+<label class="">Speed X</label>
+
+
+      
+<input class="range api" type="range" name="aRange42" data-type="int32" data-key="42"
+  onchange="valueChangedHandler(this)"
+
+        min="1" max="100" oninput="this.form.aInput42.value=this.value" />
+
+      
+<input class="value" type="number" name="aInput42" data-type="int32" data-key="42"
+  onchange="valueChangedHandler(this)"
+
+        readonly oninput="this.form.aRange42.value=this.value" />
+    </form>
+  </div>
+
+  
+
+    
+  
+    
+      
+
+
+
+
+
+
+
+
+  
+  <div class="row row-range">
+    <form>
+      
+<label class="">Speed Y</label>
+
+
+      
+<input class="range api" type="range" name="aRange43" data-type="int32" data-key="43"
+  onchange="valueChangedHandler(this)"
+
+        min="1" max="100" oninput="this.form.aInput43.value=this.value" />
+
+      
+<input class="value" type="number" name="aInput43" data-type="int32" data-key="43"
+  onchange="valueChangedHandler(this)"
+
+        readonly oninput="this.form.aRange43.value=this.value" />
+    </form>
+  </div>
+
+  
+
+    
+  
+
+
+  <details class="group">
+    <summary>Advanced</summary>
+    
+  
+    
+      
+
+
+
+
+
+
+
+
+  
+  <div class="row">
+    
+<label class="">Border Top</label>
+
+    
+<input class="api" type="text" name="name44" data-type="int32" data-key="44"
+  onchange="valueChangedHandler(this)"
+  />
+  </div>
+
+  
+
+    
+  
+    
+      
+
+
+
+
+
+
+
+
+  
+  <div class="row">
+    
+<label class="">Border Bottom</label>
+
+    
+<input class="api" type="text" name="name45" data-type="int32" data-key="45"
+  onchange="valueChangedHandler(this)"
+  />
+  </div>
+
+  
+
+    
+  
+    
+      
+
+
+
+
+
+
+
+
+  
+  <div class="row">
     
 <label class="">Cursor Park Position</label>
 
@@ -909,8 +976,17 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
-          
+    
+  
+
+  </details>
+
+  <details class="group">
+    <summary>Screensaver</summary>
+    
+  
+    
+      
 
 
 
@@ -920,24 +996,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field">
-    <span class="section-label">Screensaver</span>
-  </div>
-
-  
-
-        
-          
-
-
-
-
-
-
-
-
-  
-  <div class="field">
+  <div class="row">
     
 <label class="">Mode</label>
 
@@ -956,8 +1015,10 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
-          
+    
+  
+    
+      
 
 
 
@@ -967,7 +1028,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field field-check">
+  <div class="row">
     
 <label class="">Only If Inactive</label>
 
@@ -979,8 +1040,10 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
-          
+    
+  
+    
+      
 
 
 
@@ -990,7 +1053,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field">
+  <div class="row">
     
 <label class="">Idle Time (sec)</label>
 
@@ -1002,8 +1065,10 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
-          
+    
+  
+    
+      
 
 
 
@@ -1013,7 +1078,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field">
+  <div class="row">
     
 <label class="">Max Time (sec)</label>
 
@@ -1025,15 +1090,22 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
-      </section>
+    
+  
 
-      <section class="card common">
-        <div class="card-head">
-          <h3>Common Config</h3>
-        </div>
-        
+  </details>
+</section>
+
+    </div>
+
+    <section class="card general">
+      <header class="card-head">
+        <h2>General</h2>
+      </header>
+      <div class="general-cols">
+        <div>
           
+            
 
 
 
@@ -1043,14 +1115,12 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field">
-    <span class="section-label">Mouse</span>
-  </div>
+  <h3 class="subhead">Mouse</h3>
 
   
 
-        
           
+            
 
 
 
@@ -1060,7 +1130,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field field-check">
+  <div class="row">
     
 <label class="">Force Mouse Boot Mode</label>
 
@@ -1072,8 +1142,8 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
           
+            
 
 
 
@@ -1083,7 +1153,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field field-check">
+  <div class="row">
     
 <label class="">Enable Acceleration</label>
 
@@ -1095,8 +1165,8 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
           
+            
 
 
 
@@ -1106,7 +1176,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field field-check">
+  <div class="row">
     
 <label class="">Gaming Mode Default ON</label>
 
@@ -1118,8 +1188,8 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
           
+            
 
 
 
@@ -1129,47 +1199,33 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field field-range">
+  <div class="row row-range">
     <form>
       
 <label class="">Jump Threshold</label>
 
 
       
-<input class="input-inline" type="number" name="aInput77" data-type="uint16" data-key="77"
-  onchange="valueChangedHandler(this)"
-
-        readonly oninput="this.form.aRange77.value=this.value" />
-
-      
 <input class="range api" type="range" name="aRange77" data-type="uint16" data-key="77"
   onchange="valueChangedHandler(this)"
 
         min="0" max="3000" oninput="this.form.aInput77.value=this.value" />
+
+      
+<input class="value" type="number" name="aInput77" data-type="uint16" data-key="77"
+  onchange="valueChangedHandler(this)"
+
+        readonly oninput="this.form.aRange77.value=this.value" />
     </form>
   </div>
 
   
 
-        
           
-
-
-
-
-
-
-
-
-  
-  <div class="field">
-    <span class="section-label">Keyboard</span>
-  </div>
-
-  
-
-        
+        </div>
+        <div>
           
+            
 
 
 
@@ -1179,7 +1235,22 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field field-check">
+  <h3 class="subhead">Keyboard</h3>
+
+  
+
+          
+            
+
+
+
+
+
+
+
+
+  
+  <div class="row">
     
 <label class="">Force KBD Boot Protocol</label>
 
@@ -1191,8 +1262,8 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
           
+            
 
 
 
@@ -1202,7 +1273,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field field-check">
+  <div class="row">
     
 <label class="">KBD LED as Indicator</label>
 
@@ -1214,8 +1285,8 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
           
+            
 
 
 
@@ -1225,7 +1296,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field field-check">
+  <div class="row">
     
 <label class="">Enforce Ports</label>
 
@@ -1237,8 +1308,8 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
           
+            
 
 
 
@@ -1248,7 +1319,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field">
+  <div class="row">
     
 <label class="">Onboard LED</label>
 
@@ -1271,17 +1342,17 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
   
 
-        
-
-        <input type="submit" value="Save" id="submitButton" class="btn btn-primary btn-wide">
-      </section>
-
-      <section class="card status">
-        <div class="card-head">
-          <h3>Device Status</h3>
-        </div>
-        
           
+        </div>
+      </div>
+      <div class="actions">
+        <input type="submit" value="Save" id="submitButton" class="btn btn-primary">
+      </div>
+    </section>
+
+    <footer class="status">
+      
+        
 
 
 
@@ -1291,7 +1362,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field">
+  <span class="stat">
     
 <label class="">Running FW version</label>
 
@@ -1299,12 +1370,12 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 <input class="api" type="text" name="name78" data-type="uint16" data-key="78"
   onchange="valueChangedHandler(this)"
  data-fw-ver readonly />
-  </div>
+  </span>
 
   
 
+      
         
-          
 
 
 
@@ -1314,7 +1385,7 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 
 
   
-  <div class="field">
+  <span class="stat">
     
 <label class="">Running FW checksum</label>
 
@@ -1322,14 +1393,13 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 <input class="content api" type="text" name="name79" data-type="uint32" data-key="79"
   onchange="valueChangedHandler(this)"
  data-hex readonly />
-  </div>
+  </span>
 
   
 
-        
-      </section>
+      
+    </footer>
 
-    </div>
   </main>
 
   <script>
@@ -1417,26 +1487,70 @@ window.addEventListener('load', function () {
     document.getElementById('warning').style.display = 'block';
   }
 
+  autoConnect();
+
   this.document.getElementById('menu-buttons').addEventListener('click', function (event) {
-    window[event.target.dataset.handler]();
+    const handler = event.target.closest('[data-handler]');
+    if (handler)
+      runAction(handler.dataset.handler);
   })
 });
 
-document.getElementById('submitButton').addEventListener('click', async () => { await saveHandler(); });
+document.getElementById('submitButton').addEventListener('click', () => runAction('saveHandler'));
+
+const deskhopFilter = { vendorId: 0x2e8a, productId: 0x107c, usagePage: 0xff00, usage: 0x10 };
+
+function isDeskhop(d) {
+  return d.vendorId === deskhopFilter.vendorId && d.productId === deskhopFilter.productId &&
+    d.collections.some(c => c.usagePage === deskhopFilter.usagePage && c.usage === deskhopFilter.usage);
+}
+
+async function openDevice(d) {
+  if (!d || (device && device.opened))
+    return;
+
+  device = d;
+  if (!device.opened)
+    await device.open();
+
+  device.addEventListener('inputreport', handleInputReport);
+  document.querySelectorAll('.online').forEach(element => { element.style.opacity = 1.0; });
+  await readHandler('Connected · settings loaded');
+}
 
 async function connectHandler() {
   if (device && device.opened)
     return;
 
-  var devices = await navigator.hid.requestDevice({
-    filters: [{ vendorId: 0x2e8a, productId: 0x107c, usagePage: 0xff00, usage: 0x10 }]
+  var devices = await navigator.hid.requestDevice({ filters: [deskhopFilter] });
+  if (!devices.length) {
+    toast('No device selected', 'warn');
+    return;
+  }
+  await openDevice(devices[0]);
+}
+
+/* Chrome remembers a device once you've allowed it, so reconnect without a click when we can:
+   on page load, and whenever the DeskHop shows up again (e.g. after re-entering config mode). */
+async function autoConnect() {
+  if (!("hid" in navigator))
+    return;
+
+  const known = (await navigator.hid.getDevices()).find(isDeskhop);
+  if (known)
+    await openDevice(known);
+
+  navigator.hid.addEventListener('connect', async (event) => {
+    if (isDeskhop(event.device))
+      await openDevice(event.device);
   });
 
-  device = devices[0];
-  device.open().then(async () => {
-    device.addEventListener('inputreport', handleInputReport);
-    document.querySelectorAll('.online').forEach(element => { element.style.opacity = 1.0; });
-    await readHandler();
+  navigator.hid.addEventListener('disconnect', (event) => {
+    if (device && event.device === device) {
+      device = undefined;
+      document.querySelectorAll('.online').forEach(element => { element.style.opacity = ''; });
+      toast('Device disconnected', 'warn');
+    }
   });
 }
 
@@ -1501,9 +1615,24 @@ function updateElement(key, event) {
   }
 }
 
-async function readHandler() {
+/* Tracks a Read in progress so we can tell the user once values arrive (or don't) */
+var pendingRead = null;
+
+async function readHandler(successText = 'Settings loaded') {
   if (!device || !device.opened)
     await connectHandler();
+
+  if (pendingRead) {
+    clearTimeout(pendingRead.done);
+    clearTimeout(pendingRead.timeout);
+  }
+
+  pendingRead = { count: 0, successText };
+  pendingRead.timeout = setTimeout(() => {
+    if (pendingRead && pendingRead.count === 0)
+      toast('No response from device', 'error');
+    pendingRead = null;
+  }, 2000);
 
   await sendReport(packetType.getValAllMsg);
 }
@@ -1513,6 +1642,17 @@ async function handleInputReport(event) {
   var key = data[3];
 
   updateElement(key, event);
+
+  /* Values arrive one report each; call it done once they stop coming */
+  if (pendingRead) {
+    pendingRead.count++;
+    clearTimeout(pendingRead.done);
+    pendingRead.done = setTimeout(() => {
+      clearTimeout(pendingRead.timeout);
+      toast(pendingRead.successText, 'success');
+      pendingRead = null;
+    }, 300);
+  }
 }
 
 async function rebootHandler() {
@@ -1561,6 +1701,95 @@ async function saveHandler() {
 
 async function wipeConfigHandler() {
   await sendReport(packetType.wipeConfigMsg, [], true);
+}
+
+/* Swap the monitor layout between outputs A and B, same fields as the Left Ctrl + Right Shift + W
+   hotkey: screen count, speed X/Y, border top/bottom, screen position and cursor park position.
+   OS and screensaver stay with their output. Each changed value is sent to both boards, then saved. */
+const swapFieldOffsets = [1, 2, 3, 4, 5, 7, 8];
+const outputBase = { A: 10, B: 40 };
+
+async function swapLayoutHandler() {
+  if (!device || !device.opened)
+    return;
+
+  const changed = [];
+
+  for (const offset of swapFieldOffsets) {
+    const a = document.querySelector(`.api[data-key="${outputBase.A + offset}"]`);
+    const b = document.querySelector(`.api[data-key="${outputBase.B + offset}"]`);
+
+    if (!a || !b)
+      continue;
+
+    const valueA = a.value;
+    a.value = b.value;
+    b.value = valueA;
+
+    /* Keep the number boxes next to the sliders in step */
+    a.dispatchEvent(new Event('input', { bubbles: true }));
+    b.dispatchEvent(new Event('input', { bubbles: true }));
+
+    changed.push(a, b);
+  }
+
+  for (const element of changed)
+    await valueChangedHandler(element);
+
+  await sendReport(packetType.saveConfigMsg, [], true);
+}
+
+/* ---------- Feedback toasts ---------- */
+
+function toast(text, kind = 'info', ms = 3500) {
+  let stack = document.getElementById('toasts');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.id = 'toasts';
+    stack.setAttribute('aria-live', 'polite');
+    document.body.appendChild(stack);
+  }
+
+  const el = document.createElement('div');
+  el.className = `toast toast-${kind}`;
+  el.textContent = text;
+  el.addEventListener('click', () => el.remove());
+  stack.appendChild(el);
+
+  setTimeout(() => {
+    el.classList.add('toast-out');
+    setTimeout(() => el.remove(), 250);
+  }, ms);
+}
+
+/* What to say after each action. Read reports for itself once values arrive. */
+const actionMessages = {
+  saveHandler:            ['Saved to both boards', 'Save failed'],
+  swapLayoutHandler:      ['Swapped A ⇄ B and saved', 'Swap failed'],
+  rebootHandler:          ['Leaving config mode…', 'Exit failed'],
+  blinkHandler:           ['Blink sent', 'Blink failed'],
+  blinkBothHandler:       ['Blink sent to both boards', 'Blink failed'],
+  enterBootloaderHandler: ['Bootloader mode requested', 'Bootloader request failed'],
+  wipeConfigHandler:      ['Config wiped · defaults restored', 'Wipe failed'],
+};
+
+async function runAction(name) {
+  const needsDevice = name !== 'connectHandler';
+
+  if (needsDevice && (!device || !device.opened)) {
+    toast('Not connected · click Connect first', 'warn');
+    return;
+  }
+
+  try {
+    await window[name]();
+
+    if (actionMessages[name])
+      toast(actionMessages[name][0], 'success');
+  } catch (err) {
+    const failText = actionMessages[name] ? actionMessages[name][1] : 'Could not connect';
+    toast(`${failText}: ${err.message || err}`, 'error', 6000);
+  }
 }
   </script>
 </body>
