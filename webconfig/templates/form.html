@@ -7,26 +7,32 @@
   onchange="valueChangedHandler(this)"
 {% endmacro %}
 
-{% macro label(item, class='label-inline', add='') %}
-<label class="{{class}}"> {{ item.name }}{{ add }}</label>
+{% macro label(item, class='', add='') %}
+<label class="{{class}}">{{ item.name }}{{ add }}</label>
 {% endmacro %}
 
 {% block form_render %}
   {% if item.get("elem") == "hex_info" %}
-    {{ label(item, add=':') }}
+  <div class="field">
+    {{ label(item) }}
     {{ input(item, class='content api') }} data-hex readonly />
+  </div>
 
   {% elif item.get("elem") == "fw_version" %}
-    {{ label(item, class='') }}
+  <div class="field">
+    {{ label(item) }}
     {{ input(item) }} data-fw-ver readonly />
+  </div>
 
   {% elif item.get("elem") == "label" %}
-    {{ label(item, class='') }}
+  <div class="field">
+    <span class="section-label">{{ item.name }}</span>
+  </div>
 
   {% elif item.get("elem") == "range" %}
-  <div class="clearfix">
+  <div class="field field-range">
     <form>
-      {{ label(item, add='=') }}
+      {{ label(item) }}
 
       {{ input(item, class='input-inline', type='number', name='aInput') }}
         readonly oninput="this.form.aRange{{ key }}.value=this.value" />
@@ -34,29 +40,31 @@
       {{ input(item, class='range api', type='range', name='aRange') }}
         min="{{ item['values'].min }}" max="{{ item['values'].max }}" oninput="this.form.aInput{{key}}.value=this.value" />
     </form>
-
   </div>
 
   {% elif item.get("elem") == "checkbox" %}
-  <div class="clearfix">
+  <div class="field field-check">
     {{ label(item) }}
     {{ input(item, type="checkbox") }}  />
-
   </div>
 
   {% elif item["values"] %}
-    {{ label(item, class='') }}
+  <div class="field">
+    {{ label(item) }}
     <select class="api" data-type="{{ item.type }}" data-key="{{ key }}" required>
     <option disabled selected value></option>
 
     {% for k, v in item["values"].items() %}
     <option value="{{ k }}">{{ v }}</option>
     {% endfor %}
-    </select><br />
+    </select>
+  </div>
 
   {% else %}
-      {{ label(item, class='') }}
-      {{ input(item) }}  />
+  <div class="field">
+    {{ label(item) }}
+    {{ input(item) }}  />
+  </div>
 
   {% endif %}
 {% endblock %}

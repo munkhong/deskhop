@@ -52,6 +52,13 @@ hotkey_combo_t hotkeys[] = {
      .acknowledge    = true,
      .action_handler = &toggle_gaming_mode_handler},
 
+    /* Swap monitor layout (position, speed, screens, borders) between outputs A and B */
+    {.modifier       = KEYBOARD_MODIFIER_LEFTCTRL | KEYBOARD_MODIFIER_RIGHTSHIFT,
+     .keys           = {HID_KEY_W},
+     .key_count      = 1,
+     .acknowledge    = true,
+     .action_handler = &swap_layout_hotkey_handler},
+
     /* Enable screensaver pong for active output */
     {.modifier       = KEYBOARD_MODIFIER_LEFTCTRL | KEYBOARD_MODIFIER_RIGHTSHIFT,
      .keys           = {HID_KEY_S},

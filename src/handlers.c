@@ -73,6 +73,54 @@ void toggle_gaming_mode_handler(device_t *state, hid_keyboard_report_t *report) 
     send_value(state->gaming_mode, GAMING_MODE_MSG);
 };
 
+/* Swap the monitor-related settings between outputs A and B: screen position, mouse
+ * speed, screen count, border offsets and cursor park position. The OS and screensaver
+ * settings stay with their output, because those belong to the computer, not the monitor.
+ * Handy when the two computers trade monitors while the DeskHop cables stay put. */
+typedef struct TU_ATTR_PACKED {
+    uint8_t pos_a;     // Screen position output A should end up with
+    int32_t speed_x_a; // Speed X output A should end up with
+} swap_layout_t;
+
+static void _swap_output_layout(device_t *state) {
+    output_t *a = &state->config.output[OUTPUT_A];
+    output_t *b = &state->config.output[OUTPUT_B];
+    output_t tmp = *a;
+
+    a->pos            = b->pos;
+    a->speed_x        = b->speed_x;
+    a->speed_y        = b->speed_y;
+    a->screen_count   = b->screen_count;
+    a->border         = b->border;
+    a->mouse_park_pos = b->mouse_park_pos;
+
+    b->pos            = tmp.pos;
+    b->speed_x        = tmp.speed_x;
+    b->speed_y        = tmp.speed_y;
+    b->screen_count   = tmp.screen_count;
+    b->border         = tmp.border;
+    b->mouse_park_pos = tmp.mouse_park_pos;
+
+    /* Screen counts may have changed, start from the edge screen again */
+    a->screen_index = 1;
+    b->screen_index = 1;
+
+    save_config(state);
+}
+
+/* This key combo swaps the monitor layout between outputs, on both boards */
+void swap_layout_hotkey_handler(device_t *state, hid_keyboard_report_t *report) {
+    _swap_output_layout(state);
+
+    /* Tell the other board what output A should look like now, instead of just "toggle",
+       so a repeated or lost message can't leave the two boards out of step. */
+    swap_layout_t target = {
+        .pos_a     = state->config.output[OUTPUT_A].pos,
+        .speed_x_a = state->config.output[OUTPUT_A].speed_x,
+    };
+    queue_packet((uint8_t *)&target, SWAP_LAYOUT_MSG, sizeof(swap_layout_t));
+};
+
 /* This key combo locks both outputs simultaneously */
 void screenlock_hotkey_handler(device_t *state, hid_keyboard_report_t *report) {
     hid_keyboard_report_t lock_report = {0}, release_keys = {0};
@@ -282,6 +330,17 @@ void handle_proxy_msg(uart_packet_t *packet, device_t *state) {
 /* Process relative mouse command */
 void handle_toggle_gaming_msg(uart_packet_t *packet, device_t *state) {
     state->gaming_mode = packet->data[0];
+}
+
+/* Other board swapped the layout; swap ours too unless we already match its result */
+void handle_swap_layout_msg(uart_packet_t *packet, device_t *state) {
+    swap_layout_t target;
+    memcpy(&target, packet->data, sizeof(swap_layout_t));
+
+    output_t *a = &state->config.output[OUTPUT_A];
+
+    if (a->pos != target.pos_a || a->speed_x != target.speed_x_a)
+        _swap_output_layout(state);
 }
 
 /* Process api communication messages */

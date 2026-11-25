@@ -244,6 +244,7 @@ _Usage_:
 - ```Right CTRL + K``` - Lock/Unlock mouse desktop switching
 - ```Right CTRL + L``` - Lock both outputs at once (set output OS before, see shortcuts below)
 - ~~```Left Shift```~~ ```Left CTRL + Right Shift + G``` - Toggle gaming mode (lock to screen, act as standard mouse)
+- ```Left CTRL + Right Shift + W``` - Swap monitor layout between outputs A and B (position, speed, screen count, borders). OS and screensaver settings stay with their output.
 - ```Left CTRL + Right Shift + S``` - Enable screensaver
 - ```Left CTRL + Right Shift + X``` - Disable screensaver
 - ```Left CTRL + Caps Lock``` - Switch between outputs
