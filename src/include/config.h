@@ -43,5 +43,6 @@ void load_config(device_t *);
 void queue_cfg_packet(uart_packet_t *, device_t *);
 void reset_config_timer(device_t *);
 void save_config(device_t *);
+uint32_t calc_crc32(const uint8_t *, size_t);
 bool validate_packet(uart_packet_t *);
 void wipe_config(void);

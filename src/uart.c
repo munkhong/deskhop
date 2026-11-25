@@ -74,6 +74,8 @@ const uart_handler_t uart_handler[] = {
     {.type = CONSUMER_CONTROL_MSG, .handler = handle_consumer_control_msg},
     {.type = SCREENSAVER_MSG, .handler = handle_screensaver_msg},
     {.type = SWAP_LAYOUT_MSG, .handler = handle_swap_layout_msg},
+    {.type = STATUS_REQUEST_MSG, .handler = handle_status_request_msg},
+    {.type = STATUS_VALUE_MSG, .handler = handle_status_value_msg},
 
     /* Config */
     {.type = WIPE_CONFIG_MSG, .handler = handle_wipe_config_msg},

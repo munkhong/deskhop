@@ -53,7 +53,8 @@
       <div class="brand">Desk<span class="accent">Hop</span></div>
 
       <nav id="menu-buttons">
-        <button data-handler="connectHandler" class="btn btn-primary">Connect</button>
+        <span class="conn-chip" title="Connected to the DeskHop board your keyboard is plugged into">Connected</span>
+        <button data-handler="connectHandler" class="btn btn-primary connect-btn">Connect</button>
         <button data-handler="readHandler" class="btn online">Read</button>
         <button data-handler="saveHandler" class="btn online">Save</button>
         <button data-handler="rebootHandler" class="btn online">Exit</button>
@@ -73,6 +74,8 @@
   </header>
 
   <main class="page">
+   <div class="shell">
+    <div class="content">
 
     <div id="warning" class="notice" style="display: none;">
       <strong>WebHID isn't available.</strong>
@@ -106,11 +109,40 @@
       </div>
     </section>
 
-    <footer class="status">
-      {% for item in status %}
-        {% include "form.html" with context %}
-      {% endfor %}
-    </footer>
+    </div>
+
+    <aside class="card side" id="status-panel">
+      <header class="card-head">
+        <h2>Status</h2>
+        <span class="live" id="st-live" title="Updates every 2 seconds"></span>
+      </header>
+
+      <p class="st-empty" id="st-empty">Connect to see live status from both boards.</p>
+
+      <div id="st-body" hidden>
+        <h3 class="subhead">Health</h3>
+        <div class="st-row"><span>Firmware</span><span id="st-fw"></span></div>
+        <div class="st-row"><span>Settings</span><span id="st-sync"></span></div>
+        <div class="st-row"><span>Board link</span><span id="st-link"></span></div>
+
+        <table class="st-table">
+          <tbody>
+            <tr class="st-group"><td>Devices</td><th id="st-head-0">A</th><th id="st-head-1">B</th></tr>
+            <tr><td>Keyboard</td><td data-st="5" data-role="0"></td><td data-st="5" data-role="1"></td></tr>
+            <tr><td>Mouse</td><td data-st="6" data-role="0"></td><td data-st="6" data-role="1"></td></tr>
+            <tr><td>Computer</td><td data-st="7" data-role="0"></td><td data-st="7" data-role="1"></td></tr>
+            <tr class="st-group"><td colspan="3">Modes</td></tr>
+            <tr><td>Active output</td><td data-st="8" data-role="0"></td><td data-st="8" data-role="1"></td></tr>
+            <tr><td>Gaming mode</td><td data-st="9" data-role="0"></td><td data-st="9" data-role="1"></td></tr>
+            <tr><td>Switch lock</td><td data-st="10" data-role="0"></td><td data-st="10" data-role="1"></td></tr>
+            <tr><td>Slow mouse</td><td data-st="11" data-role="0"></td><td data-st="11" data-role="1"></td></tr>
+          </tbody>
+        </table>
+
+        <p class="st-foot" id="st-timer"></p>
+      </div>
+    </aside>
+   </div>
 
   </main>
 

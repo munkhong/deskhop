@@ -4,7 +4,8 @@ var device;
 const packetType = {
   keyboardReportMsg: 1, mouseReportMsg: 2, outputSelectMsg: 3, firmwareUpgradeMsg: 4, switchLockMsg: 7,
   syncBordersMsg: 8, flashLedMsg: 9, wipeConfigMsg: 10, readConfigMsg: 16, writeConfigMsg: 17, saveConfigMsg: 18,
-  rebootMsg: 19, getValMsg: 20, setValMsg: 21, getValAllMsg: 22, proxyPacketMsg: 23
+  rebootMsg: 19, getValMsg: 20, setValMsg: 21, getValAllMsg: 22, proxyPacketMsg: 23,
+  statusRequestMsg: 27, statusValueMsg: 28
 };
 
 function calcChecksum(report) {
@@ -109,13 +110,22 @@ async function openDevice(d) {
     await device.open();
 
   device.addEventListener('inputreport', handleInputReport);
-  document.querySelectorAll('.online').forEach(element => { element.style.opacity = 1.0; });
+  setConnected(true);
   await readHandler('Connected · settings loaded');
 }
 
+/* Show the connection state in the top bar and enable/dim the device buttons */
+function setConnected(connected) {
+  document.body.classList.toggle('is-connected', connected);
+  connected ? startStatusPolling() : stopStatusPolling();
+  document.querySelectorAll('.online').forEach(element => { element.style.opacity = connected ? 1.0 : ''; });
+}
+
 async function connectHandler() {
-  if (device && device.opened)
+  if (device && device.opened) {
+    toast('Already connected', 'info');
     return;
+  }
 
   var devices = await navigator.hid.requestDevice({ filters: [deskhopFilter] });
   if (!devices.length) {
@@ -143,7 +153,7 @@ async function autoConnect() {
   navigator.hid.addEventListener('disconnect', (event) => {
     if (device && event.device === device) {
       device = undefined;
-      document.querySelectorAll('.online').forEach(element => { element.style.opacity = ''; });
+      setConnected(false);
       toast('Device disconnected', 'warn');
     }
   });
@@ -235,6 +245,12 @@ async function readHandler(successText = 'Settings loaded') {
 async function handleInputReport(event) {
   var data = new Uint8Array(event.data.buffer);
   var key = data[3];
+
+  /* Status replies have their own numbering, keep them away from the settings fields */
+  if (data[2] === packetType.statusValueMsg) {
+    handleStatusValue(data[3], data[4], event.data.getUint32(5, true));
+    return;
+  }
 
   updateElement(key, event);
 
@@ -385,4 +401,127 @@ async function runAction(name) {
     const failText = actionMessages[name] ? actionMessages[name][1] : 'Could not connect';
     toast(`${failText}: ${err.message || err}`, 'error', 6000);
   }
+}
+
+/* ---------- Status side panel ---------- */
+
+/* Must match enum status_idx_e in handlers.c */
+const ST = {
+  fwVersion: 1, fwChecksum: 2, fingerprint: 3, role: 4, keyboard: 5, mouse: 6, host: 7,
+  activeOutput: 8, gaming: 9, switchLock: 10, slowMouse: 11, configSecsLeft: 12
+};
+const STATUS_POLL_MS = 2000;
+
+/* boardStatus[0] = board this page is connected to (keyboard side), boardStatus[1] = the other board */
+var boardStatus = [{}, {}];
+var statusSeen = [0, 0];
+var statusTimer = null;
+
+function startStatusPolling() {
+  stopStatusPolling();
+  document.getElementById('st-empty').hidden = true;
+  document.getElementById('st-body').hidden = false;
+  requestStatus();
+  statusTimer = setInterval(requestStatus, STATUS_POLL_MS);
+}
+
+function stopStatusPolling() {
+  clearInterval(statusTimer);
+  statusTimer = null;
+  boardStatus = [{}, {}];
+  statusSeen = [0, 0];
+  document.getElementById('st-empty').hidden = false;
+  document.getElementById('st-body').hidden = true;
+  document.getElementById('st-live').classList.remove('on');
+}
+
+async function requestStatus() {
+  try {
+    await sendReport(packetType.statusRequestMsg, [0]);
+  } catch (err) { /* a dropped poll isn't worth a toast, the next one retries */ }
+
+  /* Give both boards a moment to answer, then redraw (catches a silent other board too) */
+  setTimeout(renderStatus, 600);
+}
+
+function handleStatusValue(idx, source, value) {
+  if (source > 1)
+    return;
+  boardStatus[source][idx] = value;
+  statusSeen[source] = Date.now();
+}
+
+function fwText(v) {
+  const major = Math.floor((v - 100) / 1000), minor = (v - 100) % 1000;
+  return `v${major}.${minor}`;
+}
+
+function setBadge(id, text, kind, title = '') {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = `badge badge-${kind}`;
+  el.title = title;
+}
+
+function renderStatus() {
+  const now = Date.now();
+  const here = boardStatus[0], there = boardStatus[1];
+  const peerAlive = statusSeen[1] && now - statusSeen[1] < STATUS_POLL_MS * 2.5;
+
+  document.getElementById('st-live').classList.toggle('on', !!statusSeen[0] && now - statusSeen[0] < STATUS_POLL_MS * 2.5);
+
+  /* Health */
+  if (here[ST.fwVersion] === undefined)
+    return;
+
+  if (!peerAlive) {
+    setBadge('st-fw', fwText(here[ST.fwVersion]), 'muted', 'Other board did not answer');
+    setBadge('st-sync', 'Unknown', 'muted', 'Other board did not answer');
+    setBadge('st-link', 'No reply', 'error', 'The other board did not answer. It may be running older firmware, or the cable between the halves is loose.');
+  } else {
+    const sameFw = here[ST.fwVersion] === there[ST.fwVersion] && here[ST.fwChecksum] === there[ST.fwChecksum];
+    sameFw
+      ? setBadge('st-fw', `${fwText(here[ST.fwVersion])} · match`, 'ok')
+      : setBadge('st-fw', `${fwText(here[ST.fwVersion])} ≠ ${fwText(there[ST.fwVersion])}`, 'warn',
+          `This board ${fwText(here[ST.fwVersion])}, other board ${fwText(there[ST.fwVersion])}. Flash the same .uf2 to both.`);
+
+    here[ST.fingerprint] === there[ST.fingerprint]
+      ? setBadge('st-sync', 'In sync', 'ok')
+      : setBadge('st-sync', 'Out of sync', 'warn', 'The boards have different settings. Click Save to send this page\'s values to both boards.');
+
+    setBadge('st-link', 'OK', 'ok');
+  }
+
+  /* Column headers follow each board's role, so A is always on the left */
+  const roleOf = [here[ST.role], peerAlive ? there[ST.role] : (here[ST.role] === 0 ? 1 : 0)];
+  for (let source = 0; source < 2; source++) {
+    const role = roleOf[source];
+    if (role === undefined) continue;
+    document.getElementById(`st-head-${role}`).textContent =
+      `${role === 0 ? 'A' : 'B'}${source === 0 ? ' · this' : ''}`;
+  }
+
+  /* Table cells */
+  document.querySelectorAll('[data-st]').forEach(cell => {
+    const idx = Number(cell.dataset.st), role = Number(cell.dataset.role);
+    const source = roleOf[0] === role ? 0 : 1;
+    const value = (source === 1 && !peerAlive) ? undefined : boardStatus[source][idx];
+
+    let text = '–', kind = 'muted';
+    if (value !== undefined) {
+      if (idx === ST.activeOutput)
+        [text, kind] = [value ? 'B' : 'A', 'plain'];
+      else if (idx <= ST.host)
+        [text, kind] = value ? ['Yes', 'ok'] : ['No', 'muted'];
+      else
+        [text, kind] = value ? ['On', 'on'] : ['Off', 'muted'];
+    }
+    cell.innerHTML = `<span class="cell cell-${kind}">${text}</span>`;
+  });
+
+  /* Config mode countdown */
+  const secs = here[ST.configSecsLeft];
+  document.getElementById('st-timer').textContent = secs
+    ? `Config mode exits in ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')} without activity`
+    : '';
 }

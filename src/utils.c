@@ -195,6 +195,7 @@ bool validate_packet(uart_packet_t *packet) {
         SAVE_CONFIG_MSG,
         REBOOT_MSG,
         PROXY_PACKET_MSG,
+        STATUS_REQUEST_MSG,
     };
     uint8_t packet_type = packet->type;
 

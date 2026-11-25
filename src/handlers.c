@@ -464,3 +464,113 @@ void set_active_output(device_t *state, uint8_t new_output) {
        Changing outputs = no more keypresses on the previous system. */
     release_all_keys(state);
 }
+
+/* =================================================== *
+ * ==============  Status for the config page  ======== *
+ * =================================================== */
+
+/* Read-only status values the config page shows in its side panel. The board in config mode
+ * answers for itself and asks the other board over UART, so the page sees both boards.
+ * Kept separate from the GET/SET API on purpose: polling status doesn't reset the config mode
+ * timeout, and nothing here can change any state. */
+enum status_idx_e {
+    STATUS_FW_VERSION = 1,
+    STATUS_FW_CHECKSUM,
+    STATUS_SETTINGS_FINGERPRINT,
+    STATUS_BOARD_ROLE,
+    STATUS_KEYBOARD_CONNECTED,
+    STATUS_MOUSE_CONNECTED,
+    STATUS_HOST_CONNECTED,
+    STATUS_ACTIVE_OUTPUT,
+    STATUS_GAMING_MODE,
+    STATUS_SWITCH_LOCK,
+    STATUS_SLOW_MOUSE,
+    STATUS_CONFIG_SECS_LEFT,
+    STATUS_LAST = STATUS_CONFIG_SECS_LEFT,
+};
+
+enum status_source_e { STATUS_FROM_HOST = 0, STATUS_FROM_PEER = 1 };
+
+/* Fingerprint of the current settings, so the page can tell if both boards agree.
+   screen_index is runtime state that only one board tracks, so it's left out. */
+static uint32_t _settings_fingerprint(device_t *state) {
+    config_t cfg = state->config;
+
+    for (int i = 0; i < NUM_SCREENS; i++)
+        cfg.output[i].screen_index = 0;
+
+    return calc_crc32((uint8_t *)&cfg, offsetof(config_t, checksum));
+}
+
+static uint32_t _status_value(device_t *state, uint8_t idx) {
+    switch (idx) {
+        case STATUS_FW_VERSION:           return state->_running_fw.version;
+        case STATUS_FW_CHECKSUM:          return state->_running_fw.checksum;
+        case STATUS_SETTINGS_FINGERPRINT: return _settings_fingerprint(state);
+        case STATUS_BOARD_ROLE:           return BOARD_ROLE;
+        case STATUS_KEYBOARD_CONNECTED:   return state->keyboard_connected;
+        case STATUS_MOUSE_CONNECTED:      return state->mouse_connected;
+        case STATUS_HOST_CONNECTED:       return state->tud_connected;
+        case STATUS_ACTIVE_OUTPUT:        return state->active_output;
+        case STATUS_GAMING_MODE:          return state->gaming_mode;
+        case STATUS_SWITCH_LOCK:          return state->switch_lock;
+        case STATUS_SLOW_MOUSE:           return state->mouse_zoom;
+        case STATUS_CONFIG_SECS_LEFT: {
+            uint64_t now = time_us_64();
+            if (!state->config_mode_active || state->config_mode_timer <= now)
+                return 0;
+            return (uint32_t)((state->config_mode_timer - now) / 1000000);
+        }
+    }
+    return 0;
+}
+
+/* Packet layout: data[0] = status index, data[1] = which board (0 = this one, 1 = the other),
+   data[2..5] = value, little endian */
+static void _fill_status_packet(uart_packet_t *packet, device_t *state, uint8_t idx, uint8_t source) {
+    uint32_t value = _status_value(state, idx);
+
+    packet->type    = STATUS_VALUE_MSG;
+    packet->data[0] = idx;
+    packet->data[1] = source;
+    memcpy(&packet->data[2], &value, sizeof(value));
+}
+
+/* data[0] tells us who is asking: the config page (host) or the other board (peer) */
+void handle_status_request_msg(uart_packet_t *packet, device_t *state) {
+    uint8_t asked_by = packet->data[0];
+
+    if (asked_by == STATUS_FROM_HOST) {
+        /* Only the board in config mode talks to the page */
+        if (!state->config_mode_active)
+            return;
+
+        for (uint8_t idx = 1; idx <= STATUS_LAST; idx++) {
+            uart_packet_t reply = {0};
+            _fill_status_packet(&reply, state, idx, STATUS_FROM_HOST);
+            queue_cfg_packet(&reply, state);
+        }
+
+        /* ... and ask the other board for its side */
+        send_value(STATUS_FROM_PEER, STATUS_REQUEST_MSG);
+    }
+    else if (asked_by == STATUS_FROM_PEER) {
+        /* The other board wants our status: answer over UART, never over our own USB */
+        for (uint8_t idx = 1; idx <= STATUS_LAST; idx++) {
+            uart_packet_t reply = {0};
+            _fill_status_packet(&reply, state, idx, STATUS_FROM_PEER);
+            queue_packet(reply.data, STATUS_VALUE_MSG, PACKET_DATA_LENGTH);
+        }
+    }
+}
+
+/* The other board's status arrived; pass it on to the config page */
+void handle_status_value_msg(uart_packet_t *packet, device_t *state) {
+    if (!state->config_mode_active)
+        return;
+
+    uart_packet_t reply = {.type = STATUS_VALUE_MSG};
+    memcpy(reply.data, packet->data, PACKET_DATA_LENGTH);
+    reply.data[1] = STATUS_FROM_PEER;
+    queue_cfg_packet(&reply, state);
+}

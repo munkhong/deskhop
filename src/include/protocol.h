@@ -37,6 +37,8 @@ enum packet_type_e {
     REQUEST_BYTE_MSG     = 24,
     RESPONSE_BYTE_MSG    = 25,
     SWAP_LAYOUT_MSG      = 26,
+    STATUS_REQUEST_MSG   = 27,
+    STATUS_VALUE_MSG     = 28,
 };
 
 typedef enum {

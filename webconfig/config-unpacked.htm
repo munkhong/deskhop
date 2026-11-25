@@ -67,7 +67,7 @@ h2, h3 { margin: 0; }
   border-bottom: 1px solid var(--border);
 }
 .topbar-inner {
-  max-width: 1040px; margin: 0 auto; padding: 12px 24px;
+  max-width: 1340px; margin: 0 auto; padding: 12px 24px;
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
 .brand { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
@@ -92,6 +92,17 @@ h2, h3 { margin: 0; }
 /* Needs a connected device: dimmed until script.js sets opacity 1 */
 .online { opacity: 0.45; }
 
+/* Connection indicator: replaces the Connect button while connected */
+.conn-chip {
+  display: none; align-items: center; gap: 8px;
+  height: 32px; padding: 0 12px;
+  border: 1px solid var(--border); border-radius: 999px;
+  color: var(--text); font-weight: 600; white-space: nowrap;
+}
+.conn-chip::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+body.is-connected .conn-chip { display: inline-flex; }
+body.is-connected .connect-btn { display: none; }
+
 /* "More" dropdown */
 .more { position: relative; }
 .more summary { list-style: none; }
@@ -114,7 +125,8 @@ h2, h3 { margin: 0; }
 .more .menu .danger { color: var(--danger); }
 
 /* ---------- Page ---------- */
-.page { max-width: 1040px; margin: 0 auto; padding: 24px; }
+.page { max-width: 1340px; margin: 0 auto; padding: 24px; }
+.shell { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; align-items: start; }
 
 .notice {
   margin-bottom: 20px; padding: 12px 16px;
@@ -251,6 +263,11 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
 .stat input:focus { box-shadow: none; }
 
 /* ---------- Narrow screens ---------- */
+@media (max-width: 1100px) {
+  .shell { grid-template-columns: 1fr; }
+  .side { position: static; }
+}
+
 @media (max-width: 800px) {
   .outputs, .general-cols { grid-template-columns: 1fr; }
   .topbar-inner { flex-wrap: wrap; }
@@ -290,6 +307,53 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: none; }
 }
+
+/* ---------- Status side panel ---------- */
+.side { position: sticky; top: 76px; padding-bottom: 14px; }
+.side .card-head { justify-content: space-between; }
+
+.live { width: 8px; height: 8px; border-radius: 50%; background: var(--border-strong); }
+.live.on { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 5px transparent; } }
+
+.st-empty { margin: 8px 0 6px; color: var(--muted); }
+.side .subhead:first-child { margin-top: 4px; }
+
+.st-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 36px; border-top: 1px solid var(--border);
+}
+.side .subhead + .st-row { border-top: 0; }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 9px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+  background: var(--bg); color: var(--muted);
+}
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.badge-ok    { background: var(--accent-soft); color: var(--accent); }
+.badge-warn  { background: color-mix(in srgb, var(--warn) 14%, transparent); color: var(--warn); }
+.badge-error { background: color-mix(in srgb, var(--danger) 12%, transparent); color: var(--danger); }
+.badge[title]:not([title='']) { cursor: help; }
+
+.st-table { width: 100%; margin-top: 4px; border-collapse: collapse; }
+.st-table th { padding: 16px 0 6px; text-align: right; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: none; letter-spacing: 0; }
+.st-table td { padding: 7px 0; border-top: 1px solid var(--border); }
+.st-table td + td { text-align: right; width: 64px; }
+.st-table .st-group td {
+  padding: 16px 0 6px; border-top: 0;
+  font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em;
+}
+.st-table .st-group + tr td { border-top: 0; }
+
+.cell { font-weight: 600; font-size: 13px; }
+.cell-ok { color: var(--accent); }
+.cell-on { color: var(--warn); }
+.cell-muted { color: var(--muted); font-weight: 500; }
+
+.st-foot { margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+.st-foot:empty { display: none; }
   </style>
 
   <title>DeskHop Config</title>
@@ -302,7 +366,8 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
       <div class="brand">Desk<span class="accent">Hop</span></div>
 
       <nav id="menu-buttons">
-        <button data-handler="connectHandler" class="btn btn-primary">Connect</button>
+        <span class="conn-chip" title="Connected to the DeskHop board your keyboard is plugged into">Connected</span>
+        <button data-handler="connectHandler" class="btn btn-primary connect-btn">Connect</button>
         <button data-handler="readHandler" class="btn online">Read</button>
         <button data-handler="saveHandler" class="btn online">Save</button>
         <button data-handler="rebootHandler" class="btn online">Exit</button>
@@ -322,6 +387,8 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
   </header>
 
   <main class="page">
+   <div class="shell">
+    <div class="content">
 
     <div id="warning" class="notice" style="display: none;">
       <strong>WebHID isn't available.</strong>
@@ -1350,55 +1417,40 @@ input[type='checkbox']:focus-visible { outline: 2px solid var(--accent); outline
       </div>
     </section>
 
-    <footer class="status">
-      
-        
+    </div>
 
+    <aside class="card side" id="status-panel">
+      <header class="card-head">
+        <h2>Status</h2>
+        <span class="live" id="st-live" title="Updates every 2 seconds"></span>
+      </header>
 
+      <p class="st-empty" id="st-empty">Connect to see live status from both boards.</p>
 
+      <div id="st-body" hidden>
+        <h3 class="subhead">Health</h3>
+        <div class="st-row"><span>Firmware</span><span id="st-fw"></span></div>
+        <div class="st-row"><span>Settings</span><span id="st-sync"></span></div>
+        <div class="st-row"><span>Board link</span><span id="st-link"></span></div>
 
+        <table class="st-table">
+          <tbody>
+            <tr class="st-group"><td>Devices</td><th id="st-head-0">A</th><th id="st-head-1">B</th></tr>
+            <tr><td>Keyboard</td><td data-st="5" data-role="0"></td><td data-st="5" data-role="1"></td></tr>
+            <tr><td>Mouse</td><td data-st="6" data-role="0"></td><td data-st="6" data-role="1"></td></tr>
+            <tr><td>Computer</td><td data-st="7" data-role="0"></td><td data-st="7" data-role="1"></td></tr>
+            <tr class="st-group"><td colspan="3">Modes</td></tr>
+            <tr><td>Active output</td><td data-st="8" data-role="0"></td><td data-st="8" data-role="1"></td></tr>
+            <tr><td>Gaming mode</td><td data-st="9" data-role="0"></td><td data-st="9" data-role="1"></td></tr>
+            <tr><td>Switch lock</td><td data-st="10" data-role="0"></td><td data-st="10" data-role="1"></td></tr>
+            <tr><td>Slow mouse</td><td data-st="11" data-role="0"></td><td data-st="11" data-role="1"></td></tr>
+          </tbody>
+        </table>
 
-
-
-
-  
-  <span class="stat">
-    
-<label class="">Running FW version</label>
-
-    
-<input class="api" type="text" name="name78" data-type="uint16" data-key="78"
-  onchange="valueChangedHandler(this)"
- data-fw-ver readonly />
-  </span>
-
-  
-
-      
-        
-
-
-
-
-
-
-
-
-  
-  <span class="stat">
-    
-<label class="">Running FW checksum</label>
-
-    
-<input class="content api" type="text" name="name79" data-type="uint32" data-key="79"
-  onchange="valueChangedHandler(this)"
- data-hex readonly />
-  </span>
-
-  
-
-      
-    </footer>
+        <p class="st-foot" id="st-timer"></p>
+      </div>
+    </aside>
+   </div>
 
   </main>
 
@@ -1409,7 +1461,8 @@ var device;
 const packetType = {
   keyboardReportMsg: 1, mouseReportMsg: 2, outputSelectMsg: 3, firmwareUpgradeMsg: 4, switchLockMsg: 7,
   syncBordersMsg: 8, flashLedMsg: 9, wipeConfigMsg: 10, readConfigMsg: 16, writeConfigMsg: 17, saveConfigMsg: 18,
-  rebootMsg: 19, getValMsg: 20, setValMsg: 21, getValAllMsg: 22, proxyPacketMsg: 23
+  rebootMsg: 19, getValMsg: 20, setValMsg: 21, getValAllMsg: 22, proxyPacketMsg: 23,
+  statusRequestMsg: 27, statusValueMsg: 28
 };
 
 function calcChecksum(report) {
@@ -1514,13 +1567,22 @@ async function openDevice(d) {
     await device.open();
 
   device.addEventListener('inputreport', handleInputReport);
-  document.querySelectorAll('.online').forEach(element => { element.style.opacity = 1.0; });
+  setConnected(true);
   await readHandler('Connected · settings loaded');
 }
 
+/* Show the connection state in the top bar and enable/dim the device buttons */
+function setConnected(connected) {
+  document.body.classList.toggle('is-connected', connected);
+  connected ? startStatusPolling() : stopStatusPolling();
+  document.querySelectorAll('.online').forEach(element => { element.style.opacity = connected ? 1.0 : ''; });
+}
+
 async function connectHandler() {
-  if (device && device.opened)
+  if (device && device.opened) {
+    toast('Already connected', 'info');
     return;
+  }
 
   var devices = await navigator.hid.requestDevice({ filters: [deskhopFilter] });
   if (!devices.length) {
@@ -1548,7 +1610,7 @@ async function autoConnect() {
   navigator.hid.addEventListener('disconnect', (event) => {
     if (device && event.device === device) {
       device = undefined;
-      document.querySelectorAll('.online').forEach(element => { element.style.opacity = ''; });
+      setConnected(false);
       toast('Device disconnected', 'warn');
     }
   });
@@ -1640,6 +1702,12 @@ async function readHandler(successText = 'Settings loaded') {
 async function handleInputReport(event) {
   var data = new Uint8Array(event.data.buffer);
   var key = data[3];
+
+  /* Status replies have their own numbering, keep them away from the settings fields */
+  if (data[2] === packetType.statusValueMsg) {
+    handleStatusValue(data[3], data[4], event.data.getUint32(5, true));
+    return;
+  }
 
   updateElement(key, event);
 
@@ -1790,6 +1858,129 @@ async function runAction(name) {
     const failText = actionMessages[name] ? actionMessages[name][1] : 'Could not connect';
     toast(`${failText}: ${err.message || err}`, 'error', 6000);
   }
+}
+
+/* ---------- Status side panel ---------- */
+
+/* Must match enum status_idx_e in handlers.c */
+const ST = {
+  fwVersion: 1, fwChecksum: 2, fingerprint: 3, role: 4, keyboard: 5, mouse: 6, host: 7,
+  activeOutput: 8, gaming: 9, switchLock: 10, slowMouse: 11, configSecsLeft: 12
+};
+const STATUS_POLL_MS = 2000;
+
+/* boardStatus[0] = board this page is connected to (keyboard side), boardStatus[1] = the other board */
+var boardStatus = [{}, {}];
+var statusSeen = [0, 0];
+var statusTimer = null;
+
+function startStatusPolling() {
+  stopStatusPolling();
+  document.getElementById('st-empty').hidden = true;
+  document.getElementById('st-body').hidden = false;
+  requestStatus();
+  statusTimer = setInterval(requestStatus, STATUS_POLL_MS);
+}
+
+function stopStatusPolling() {
+  clearInterval(statusTimer);
+  statusTimer = null;
+  boardStatus = [{}, {}];
+  statusSeen = [0, 0];
+  document.getElementById('st-empty').hidden = false;
+  document.getElementById('st-body').hidden = true;
+  document.getElementById('st-live').classList.remove('on');
+}
+
+async function requestStatus() {
+  try {
+    await sendReport(packetType.statusRequestMsg, [0]);
+  } catch (err) { /* a dropped poll isn't worth a toast, the next one retries */ }
+
+  /* Give both boards a moment to answer, then redraw (catches a silent other board too) */
+  setTimeout(renderStatus, 600);
+}
+
+function handleStatusValue(idx, source, value) {
+  if (source > 1)
+    return;
+  boardStatus[source][idx] = value;
+  statusSeen[source] = Date.now();
+}
+
+function fwText(v) {
+  const major = Math.floor((v - 100) / 1000), minor = (v - 100) % 1000;
+  return `v${major}.${minor}`;
+}
+
+function setBadge(id, text, kind, title = '') {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = `badge badge-${kind}`;
+  el.title = title;
+}
+
+function renderStatus() {
+  const now = Date.now();
+  const here = boardStatus[0], there = boardStatus[1];
+  const peerAlive = statusSeen[1] && now - statusSeen[1] < STATUS_POLL_MS * 2.5;
+
+  document.getElementById('st-live').classList.toggle('on', !!statusSeen[0] && now - statusSeen[0] < STATUS_POLL_MS * 2.5);
+
+  /* Health */
+  if (here[ST.fwVersion] === undefined)
+    return;
+
+  if (!peerAlive) {
+    setBadge('st-fw', fwText(here[ST.fwVersion]), 'muted', 'Other board did not answer');
+    setBadge('st-sync', 'Unknown', 'muted', 'Other board did not answer');
+    setBadge('st-link', 'No reply', 'error', 'The other board did not answer. It may be running older firmware, or the cable between the halves is loose.');
+  } else {
+    const sameFw = here[ST.fwVersion] === there[ST.fwVersion] && here[ST.fwChecksum] === there[ST.fwChecksum];
+    sameFw
+      ? setBadge('st-fw', `${fwText(here[ST.fwVersion])} · match`, 'ok')
+      : setBadge('st-fw', `${fwText(here[ST.fwVersion])} ≠ ${fwText(there[ST.fwVersion])}`, 'warn',
+          `This board ${fwText(here[ST.fwVersion])}, other board ${fwText(there[ST.fwVersion])}. Flash the same .uf2 to both.`);
+
+    here[ST.fingerprint] === there[ST.fingerprint]
+      ? setBadge('st-sync', 'In sync', 'ok')
+      : setBadge('st-sync', 'Out of sync', 'warn', 'The boards have different settings. Click Save to send this page\'s values to both boards.');
+
+    setBadge('st-link', 'OK', 'ok');
+  }
+
+  /* Column headers follow each board's role, so A is always on the left */
+  const roleOf = [here[ST.role], peerAlive ? there[ST.role] : (here[ST.role] === 0 ? 1 : 0)];
+  for (let source = 0; source < 2; source++) {
+    const role = roleOf[source];
+    if (role === undefined) continue;
+    document.getElementById(`st-head-${role}`).textContent =
+      `${role === 0 ? 'A' : 'B'}${source === 0 ? ' · this' : ''}`;
+  }
+
+  /* Table cells */
+  document.querySelectorAll('[data-st]').forEach(cell => {
+    const idx = Number(cell.dataset.st), role = Number(cell.dataset.role);
+    const source = roleOf[0] === role ? 0 : 1;
+    const value = (source === 1 && !peerAlive) ? undefined : boardStatus[source][idx];
+
+    let text = '–', kind = 'muted';
+    if (value !== undefined) {
+      if (idx === ST.activeOutput)
+        [text, kind] = [value ? 'B' : 'A', 'plain'];
+      else if (idx <= ST.host)
+        [text, kind] = value ? ['Yes', 'ok'] : ['No', 'muted'];
+      else
+        [text, kind] = value ? ['On', 'on'] : ['Off', 'muted'];
+    }
+    cell.innerHTML = `<span class="cell cell-${kind}">${text}</span>`;
+  });
+
+  /* Config mode countdown */
+  const secs = here[ST.configSecsLeft];
+  document.getElementById('st-timer').textContent = secs
+    ? `Config mode exits in ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')} without activity`
+    : '';
 }
   </script>
 </body>
