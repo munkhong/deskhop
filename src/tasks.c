@@ -163,6 +163,7 @@ void heartbeat_output_task(device_t *state) {
         .type = HEARTBEAT_MSG,
         .data16 = {
             [0] = state->_running_fw.version,
+            [1] = state->config_mode_active,
             [2] = state->active_output,
         },
     };
@@ -196,9 +197,20 @@ void process_hid_queue_task(device_t *state) {
 }
 
 /* Task that handles copying firmware from the other device to ours */
+/* How long to wait for the other board to answer a byte request before giving up */
+#define FW_UPGRADE_TIMEOUT_US 500000
+
 void firmware_upgrade_task(device_t *state) {
-    if (!state->fw.upgrade_in_progress || !state->fw.byte_done)
+    if (!state->fw.upgrade_in_progress)
         return;
+
+    /* The other board went quiet (rebooted, config mode, cable). Without this we'd wait forever,
+       with heartbeats and the device itself stalled. Cancel; a later heartbeat restarts it. */
+    if (!state->fw.byte_done) {
+        if (time_us_64() - state->fw.requested_at > FW_UPGRADE_TIMEOUT_US)
+            cancel_firmware_upgrade(state);
+        return;
+    }
 
     if (queue_is_full(&state->uart_tx_queue))
         return;
@@ -208,13 +220,38 @@ void firmware_upgrade_task(device_t *state) {
     if (TU_U32_BYTE0(state->fw.address) == 0x00 && state->fw.address != 0) {
 
         uint32_t page_start_addr = (state->fw.address - 1) & 0xFFFFFF00;
-        write_flash_page((uint32_t)ADDR_FW_RUNNING + page_start_addr - XIP_BASE, state->page_buffer);
+
+        /* The first page holds the boot stage the chip checks before starting anything. Erase
+           its sector now and keep the page in RAM until everything else is written: if the copy
+           is interrupted and power is lost, the chip finds no valid boot stage and comes up as the
+           RPI-RP2 recovery drive, instead of trying to run a half-written image. */
+        if (page_start_addr == 0) {
+            uint32_t ints = save_and_disable_interrupts();
+            flash_range_erase((uint32_t)ADDR_FW_RUNNING - XIP_BASE, FLASH_SECTOR_SIZE);
+            restore_interrupts(ints);
+
+            memcpy(state->fw.first_page, state->page_buffer, FLASH_PAGE_SIZE);
+            state->fw.first_page_held = true;
+        } else {
+            /* Pages 1-15 land in the already-erased first sector, write_flash_page only
+               erases on a sector's first page */
+            write_flash_page((uint32_t)ADDR_FW_RUNNING + page_start_addr - XIP_BASE, state->page_buffer);
+        }
     }
 
     /* End condition, when reached the process is completed. */
     if (state->fw.address >= STAGING_IMAGE_SIZE) {
         state->fw.upgrade_in_progress = 0;
         state->fw.checksum = ~state->fw.checksum;
+
+        /* Everything else is in place, now write the held-back first page (its sector is
+           already erased, so program only) */
+        if (state->fw.first_page_held) {
+            uint32_t ints = save_and_disable_interrupts();
+            flash_range_program((uint32_t)ADDR_FW_RUNNING - XIP_BASE, state->fw.first_page, FLASH_PAGE_SIZE);
+            restore_interrupts(ints);
+            state->fw.first_page_held = false;
+        }
 
         /* Checksum mismatch, we wipe the stage 2 bootloader and rely on ROM recovery */
         if(calculate_firmware_crc32() != state->fw.checksum) {

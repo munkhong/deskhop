@@ -1934,13 +1934,21 @@ function renderStatus() {
   if (!peerAlive) {
     setBadge('st-fw', fwText(here[ST.fwVersion]), 'muted', 'Other board did not answer');
     setBadge('st-sync', 'Unknown', 'muted', 'Other board did not answer');
-    setBadge('st-link', 'No reply', 'error', 'The other board did not answer. It may be running older firmware, or the cable between the halves is loose.');
+    setBadge('st-link', 'No reply', 'error', 'The other board did not answer. It may be running older firmware, still finishing a firmware copy, or the cable between the halves is loose.');
   } else {
     const sameFw = here[ST.fwVersion] === there[ST.fwVersion] && here[ST.fwChecksum] === there[ST.fwChecksum];
-    sameFw
-      ? setBadge('st-fw', `${fwText(here[ST.fwVersion])} · match`, 'ok')
-      : setBadge('st-fw', `${fwText(here[ST.fwVersion])} ≠ ${fwText(there[ST.fwVersion])}`, 'warn',
-          `This board ${fwText(here[ST.fwVersion])}, other board ${fwText(there[ST.fwVersion])}. Flash the same .uf2 to both.`);
+    if (sameFw)
+      setBadge('st-fw', `${fwText(here[ST.fwVersion])} · match`, 'ok');
+    else if (here[ST.fwVersion] !== there[ST.fwVersion])
+      /* The older board copies the newer firmware, but never during config mode */
+      setBadge('st-fw', 'Updates after exit', 'warn',
+        `This board ${fwText(here[ST.fwVersion])}, other board ${fwText(there[ST.fwVersion])}. ` +
+        'The older board copies the newer firmware once you exit config mode. ' +
+        'Leave the DeskHop alone for a minute or two after exiting, until the LED stops blinking.');
+    else
+      setBadge('st-fw', 'Different build', 'warn',
+        `Both boards report ${fwText(here[ST.fwVersion])} but different builds, so they won't update each other. ` +
+        'Flash the same .uf2 to both boards.');
 
     here[ST.fingerprint] === there[ST.fingerprint]
       ? setBadge('st-sync', 'In sync', 'ok')

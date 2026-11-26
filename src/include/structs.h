@@ -63,6 +63,9 @@ typedef struct {
     uint16_t version;
     bool byte_done;           // Has the byte been successfully transferred
     bool upgrade_in_progress; // True if firmware transfer from the other box is in progress
+    uint64_t requested_at;    // When the last byte was requested, to detect a silent other board
+    bool first_page_held;     // First page received and held back, written last (see firmware_upgrade_task)
+    uint8_t first_page[FLASH_PAGE_SIZE];
 } fw_upgrade_state_t;
 
 typedef struct {

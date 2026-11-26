@@ -144,7 +144,8 @@ void request_byte(device_t *state, uint32_t address) {
         .data32[0] = address,
         .type = REQUEST_BYTE_MSG,
     };
-    state->fw.byte_done = false;
+    state->fw.byte_done    = false;
+    state->fw.requested_at = time_us_64();
 
     queue_try_add(&global_state.uart_tx_queue, &packet);
 }

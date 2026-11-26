@@ -426,12 +426,32 @@ void handle_response_byte_msg(uart_packet_t *packet, device_t *state) {
 }
 
 /* Process a request to read a firmware package from flash */
+/* Stop a firmware copy from the other board. We keep running from RAM as before; the copy
+   starts over from the beginning on a later heartbeat. If power is lost first, the held-back
+   first page means we come up as the RPI-RP2 recovery drive. */
+void cancel_firmware_upgrade(device_t *state) {
+    state->fw.upgrade_in_progress = false;
+    state->fw.byte_done           = true;
+    state->fw.address             = 0;
+    state->fw.first_page_held     = false;
+    restore_leds(state);
+}
+
 void handle_heartbeat_msg(uart_packet_t *packet, device_t *state) {
     uint16_t other_running_version = packet->data16[0];
+    bool other_in_config_mode      = packet->data16[1];
 
     /* Compile-time kill-switch: never kick off a cross-device firmware copy */
     if (DISABLE_FW_UPGRADE)
         return;
+
+    /* Config mode reboots the board when it ends, which would cut a copy short. Pause instead:
+       cancel now, and the next heartbeat after config mode restarts the copy. */
+    if (other_in_config_mode || state->config_mode_active) {
+        if (state->fw.upgrade_in_progress)
+            cancel_firmware_upgrade(state);
+        return;
+    }
 
     if (state->fw.upgrade_in_progress)
         return;
